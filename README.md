@@ -1,4 +1,4 @@
-# Career & Education Advisor Platform
+#EDUCAREER - Career & Education Advisor Platform
 
 A comprehensive web application designed to guide students through their career and educational journey. This platform provides personalized career assessments, college recommendations, scholarship information, and AI-powered guidance to help students make informed decisions about their future.
 
