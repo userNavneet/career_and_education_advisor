@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+pymongo
+python-dotenv
+passlib==1.7.4
+bcrypt==3.2.2
+python-jose[cryptography]
+pydantic
+email-validator
+dnspython
+certifi
+numpy
+sentence-transformers
+datasets
+requests
+openpyxl

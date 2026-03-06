@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -10,8 +10,8 @@ import {
   TrendingUp,
   Briefcase,
 } from 'lucide-react';
-import { assessmentQuestions, careerFields } from '../../data/mockAssessments';
-import { careers } from '../../data/mockCareers';
+import { fetchAssessmentQuestions, submitAssessment } from '../../services/assessments';
+import { careerFields } from '../../data/mockAssessments';
 
 export default function Assessment() {
   const { user, updateProfile } = useAuth();
@@ -20,11 +20,35 @@ export default function Assessment() {
   const [answers, setAnswers] = useState({});
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState(null);
+  const [assessmentQuestions, setAssessmentQuestions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const progress = ((currentQuestion + 1) / assessmentQuestions.length) * 100;
+  const progress = assessmentQuestions.length
+    ? ((currentQuestion + 1) / assessmentQuestions.length) * 100
+    : 0;
 
-  const handleAnswer = (questionId, optionId, weights) => {
-    setAnswers({ ...answers, [questionId]: { optionId, weights } });
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError('');
+    fetchAssessmentQuestions()
+      .then((data) => {
+        if (active) setAssessmentQuestions(data);
+      })
+      .catch((err) => {
+        if (active) setError(err.message || 'Failed to load questions');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleAnswer = (questionId, optionId) => {
+    setAnswers({ ...answers, [questionId]: { optionId } });
   };
 
   const handleNext = () => {
@@ -41,49 +65,26 @@ export default function Assessment() {
     }
   };
 
-  const calculateResults = () => {
-    const fieldScores = {};
+  const calculateResults = async () => {
+    const answersPayload = Object.entries(answers).map(([questionId, value]) => ({
+      question_id: questionId,
+      option_id: value.optionId,
+    }));
 
-    // Calculate scores for each field
-    Object.values(answers).forEach(({ weights }) => {
-      Object.entries(weights).forEach(([field, score]) => {
-        fieldScores[field] = (fieldScores[field] || 0) + score;
-      });
-    });
-
-    // Sort fields by score
-    const sortedFields = Object.entries(fieldScores)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 3)
-      .map(([field]) => careerFields[field]);
-
-    // Get recommended careers based on top fields
-    const topFieldKeys = Object.keys(fieldScores)
-      .sort((a, b) => fieldScores[b] - fieldScores[a])
-      .slice(0, 3);
-
-    const recommendedCareers = careers
-      .filter((career) =>
-        topFieldKeys.some((field) => career.field.toLowerCase().includes(field))
-      )
-      .slice(0, 5);
-
-    const assessmentResults = {
-      topFields: sortedFields,
-      recommendedCareers: recommendedCareers.map((c) => c.id),
-      fieldScores,
+    const assessmentResults = await submitAssessment(answersPayload);
+    const resultsWithMeta = {
+      ...assessmentResults,
       completedAt: new Date().toISOString(),
     };
 
-    setResults(assessmentResults);
+    setResults(resultsWithMeta);
     setShowResults(true);
 
-    // Update user profile
     updateProfile({
       assessmentStatus: {
         completed: true,
         lastTaken: new Date().toISOString(),
-        results: assessmentResults,
+        results: resultsWithMeta,
       },
       profileCompletion: Math.min(100, (user?.profileCompletion || 0) + 15),
     });
@@ -91,6 +92,12 @@ export default function Assessment() {
 
   const currentQ = assessmentQuestions[currentQuestion];
   const isAnswered = answers[currentQ?.id];
+  const scoreEntries = useMemo(() => {
+    if (!results?.scores) return [];
+    return Object.entries(results.scores)
+      .sort(([, a], [, b]) => b - a)
+      .map(([key, value]) => ({ key, value, label: careerFields[key] || key }));
+  }, [results]);
 
   if (showResults && results) {
     return (
@@ -121,7 +128,7 @@ export default function Assessment() {
               Your Top Career Fields
             </h2>
             <div className="grid md:grid-cols-3 gap-4">
-              {results.topFields.map((field, index) => (
+              {results.top_fields?.map((field, index) => (
                 <motion.div
                   key={field}
                   initial={{ opacity: 0, y: 20 }}
@@ -136,6 +143,25 @@ export default function Assessment() {
             </div>
           </div>
 
+          {/* Score Matrix */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold mb-4">Field Score Matrix</h2>
+            <div className="space-y-3">
+              {scoreEntries.map((entry) => (
+                <div key={entry.key} className="flex items-center gap-3">
+                  <div className="w-40 text-sm text-gray-700">{entry.label}</div>
+                  <div className="flex-1 bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-500 to-purple-600"
+                      style={{ width: `${Math.min(entry.value * 10, 100)}%` }}
+                    />
+                  </div>
+                  <div className="w-10 text-sm text-gray-600 text-right">{entry.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Recommended Careers */}
           <div className="mb-8">
             <h2 className="text-xl font-bold mb-4 flex items-center justify-center gap-2">
@@ -143,9 +169,7 @@ export default function Assessment() {
               Recommended Careers
             </h2>
             <div className="grid md:grid-cols-2 gap-4">
-              {careers
-                .filter((c) => results.recommendedCareers.includes(c.id))
-                .map((career, index) => (
+              {(results.recommendations?.careers || []).map((career, index) => (
                   <motion.div
                     key={career.id}
                     initial={{ opacity: 0, x: -20 }}
@@ -154,24 +178,48 @@ export default function Assessment() {
                     className="glass-card p-4 text-left hover:shadow-lg transition-all"
                   >
                     <div className="flex items-start gap-3">
-                      <img
-                        src={career.image}
-                        alt={career.title}
-                        className="w-16 h-16 rounded-lg object-cover"
-                      />
+                      {career.image_url ? (
+                        <img
+                          src={career.image_url}
+                          alt={career.title}
+                          className="w-16 h-16 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 rounded-lg bg-gray-200" />
+                      )}
                       <div className="flex-1">
                         <h3 className="font-bold">{career.title}</h3>
                         <p className="text-sm text-gray-600 mb-2">{career.field}</p>
                         <div className="flex items-center gap-2">
                           <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
-                            {career.demandLevel}
+                            {career.demand_level || 'Growing'}
                           </span>
-                          <span className="text-xs text-gray-600">{career.averageSalary}</span>
+                          <span className="text-xs text-gray-600">
+                            {career.average_salary || ''}
+                          </span>
                         </div>
                       </div>
                     </div>
                   </motion.div>
-                ))}
+              ))}
+              {(results.recommendations?.careers || []).length === 0 && (
+                <div className="text-sm text-gray-600">No career matches yet.</div>
+              )}
+            </div>
+          </div>
+
+          {/* Recommended Courses */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold mb-4">Recommended Courses</h2>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {(results.recommendations?.courses || []).map((course) => (
+                <span
+                  key={course}
+                  className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full"
+                >
+                  {course}
+                </span>
+              ))}
             </div>
           </div>
 
@@ -186,6 +234,14 @@ export default function Assessment() {
         </div>
       </motion.div>
     );
+  }
+
+  if (loading) {
+    return <div className="text-sm text-gray-600">Loading assessment...</div>;
+  }
+
+  if (error) {
+    return <div className="text-sm text-red-600">{error}</div>;
   }
 
   return (

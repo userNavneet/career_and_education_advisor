@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { users } from '../data/mockUsers';
+import { request } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -25,41 +25,41 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    // Mock login - check against dummy data
-    const foundUser = Object.values(users).find(
-      (u) => u.email === email && u.password === password
-    );
-
-    if (foundUser) {
-      setUser(foundUser);
-      localStorage.setItem('user', JSON.stringify(foundUser));
-      return { success: true, user: foundUser };
+    try {
+      const data = await request('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+      localStorage.setItem('access_token', data.access_token);
+      setUser(data.user);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      return { success: true, user: data.user };
+    } catch (err) {
+      return { success: false, error: err.message || 'Invalid credentials' };
     }
-
-    return { success: false, error: 'Invalid credentials' };
   };
 
   const signup = async (userData) => {
-    // Mock signup - in real app, would make API call
-    const newUser = {
-      ...userData,
-      id: `user-${Date.now()}`,
-      role: userData.role || 'student',
-      profile: {
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-      },
-    };
-
-    setUser(newUser);
-    localStorage.setItem('user', JSON.stringify(newUser));
-    return { success: true, user: newUser };
+    try {
+      await request('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: userData.email,
+          password: userData.password,
+          full_name: `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
+          role: userData.role || 'student',
+        }),
+      });
+      return await login(userData.email, userData.password);
+    } catch (err) {
+      return { success: false, error: err.message || 'Signup failed' };
+    }
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('access_token');
   };
 
   const updateProfile = (updatedData) => {

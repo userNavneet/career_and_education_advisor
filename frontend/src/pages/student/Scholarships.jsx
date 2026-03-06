@@ -1,21 +1,50 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Filter, DollarSign, Calendar, ExternalLink, Bookmark } from 'lucide-react';
-import { scholarships } from '../../data/mockScholarshipsAndResources';
+import { fetchScholarships } from '../../services/scholarships';
 
 export default function Scholarships() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [scholarships, setScholarships] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const categories = ['all', ...new Set(scholarships.map((s) => s.category))];
+  const categories = useMemo(
+    () => ['all', ...new Set(scholarships.map((s) => s.category).filter(Boolean))],
+    [scholarships]
+  );
 
-  const filteredScholarships = scholarships.filter((scholarship) => {
-    const matchesSearch =
-      scholarship.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      scholarship.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || scholarship.category === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError('');
+    fetchScholarships()
+      .then((data) => {
+        if (active) setScholarships(data);
+      })
+      .catch((err) => {
+        if (active) setError(err.message || 'Failed to load scholarships');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const filteredScholarships = useMemo(() => {
+    return scholarships.filter((scholarship) => {
+      const name = scholarship.name || '';
+      const description = scholarship.description || '';
+      const matchesSearch =
+        name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        description.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = categoryFilter === 'all' || scholarship.category === categoryFilter;
+      return matchesSearch && matchesCategory;
+    });
+  }, [scholarships, searchTerm, categoryFilter]);
 
   return (
     <div>
@@ -54,9 +83,12 @@ export default function Scholarships() {
         </div>
       </div>
 
-      {/* Scholarships Grid */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {filteredScholarships.map((scholarship, index) => (
+      {loading && <div className="text-sm text-gray-600">Loading scholarships...</div>}
+      {error && <div className="text-sm text-red-600">{error}</div>}
+
+      {!loading && !error && (
+        <div className="grid md:grid-cols-2 gap-6">
+          {filteredScholarships.map((scholarship, index) => (
           <motion.div
             key={scholarship.id}
             initial={{ opacity: 0, y: 20 }}
@@ -113,7 +145,8 @@ export default function Scholarships() {
             </a>
           </motion.div>
         ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

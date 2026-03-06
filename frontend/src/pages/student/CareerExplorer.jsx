@@ -1,22 +1,58 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Filter, TrendingUp, DollarSign, GraduationCap, X } from 'lucide-react';
-import { careers } from '../../data/mockCareers';
+import { fetchCareers } from '../../services/careers';
 
 export default function CareerExplorer() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedField, setSelectedField] = useState('all');
+  const [selectedSkill, setSelectedSkill] = useState('');
   const [selectedCareer, setSelectedCareer] = useState(null);
+  const [careers, setCareers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const fields = ['all', ...new Set(careers.map((c) => c.field))];
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError('');
+    fetchCareers()
+      .then((data) => {
+        if (active) setCareers(data);
+      })
+      .catch((err) => {
+        if (active) setError(err.message || 'Failed to load careers');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
-  const filteredCareers = careers.filter((career) => {
-    const matchesSearch =
-      career.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      career.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesField = selectedField === 'all' || career.field === selectedField;
-    return matchesSearch && matchesField;
-  });
+  const fields = useMemo(
+    () => ['all', ...new Set(careers.map((c) => c.field).filter(Boolean))],
+    [careers]
+  );
+
+  const filteredCareers = useMemo(() => {
+    return careers.filter((career) => {
+      const search = searchTerm.toLowerCase();
+      const skillMatch = (career.skills || []).some((skill) =>
+        String(skill).toLowerCase().includes(search)
+      );
+      const selectedSkillMatch =
+        !selectedSkill ||
+        (career.skills || []).some((skill) => String(skill).toLowerCase() === selectedSkill.toLowerCase());
+      const matchesSearch =
+        career.title.toLowerCase().includes(search) ||
+        career.description.toLowerCase().includes(search) ||
+        skillMatch;
+      const matchesField = selectedField === 'all' || career.field === selectedField;
+      return matchesSearch && matchesField && selectedSkillMatch;
+    });
+  }, [careers, searchTerm, selectedField, selectedSkill]);
 
   return (
     <div>
@@ -54,11 +90,25 @@ export default function CareerExplorer() {
             </select>
           </div>
         </div>
+        {selectedSkill && (
+          <div className="mt-3 text-sm">
+            <span className="mr-2 text-gray-600">Skill filter:</span>
+            <button
+              className="bg-blue-100 text-blue-700 px-2 py-1 rounded"
+              onClick={() => setSelectedSkill('')}
+            >
+              {selectedSkill} (clear)
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Careers Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCareers.map((career, index) => (
+      {loading && <div className="text-sm text-gray-600">Loading careers...</div>}
+      {error && <div className="text-sm text-red-600">{error}</div>}
+
+      {!loading && !error && (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredCareers.map((career, index) => (
           <motion.div
             key={career.id}
             initial={{ opacity: 0, y: 20 }}
@@ -67,11 +117,20 @@ export default function CareerExplorer() {
             onClick={() => setSelectedCareer(career)}
             className="glass-card-hover p-6 cursor-pointer"
           >
-            <img
-              src={career.image}
-              alt={career.title}
-              className="w-full h-40 object-cover rounded-lg mb-4"
-            />
+            {career.image ? (
+              <img
+                src={career.image}
+                alt={career.title}
+                onError={(e) => {
+                  e.currentTarget.src = `https://placehold.co/1200x800/png?text=${encodeURIComponent(
+                    career.title
+                  )}`;
+                }}
+                className="w-full h-40 object-cover rounded-lg mb-4"
+              />
+            ) : (
+              <div className="w-full h-40 rounded-lg bg-gray-200 mb-4" />
+            )}
             <h3 className="font-bold text-lg mb-2">{career.title}</h3>
             <p className="text-sm text-gray-600 mb-3">{career.field}</p>
             <p className="text-sm text-gray-700 mb-4 line-clamp-2">{career.description}</p>
@@ -86,19 +145,29 @@ export default function CareerExplorer() {
                 <span>Growth: {career.growthRate}</span>
               </div>
               <div className="flex flex-wrap gap-1 mt-2">
-                {career.skills.slice(0, 3).map((skill) => (
-                  <span
+                {career.skills.slice(0, 6).map((skill) => (
+                  <button
                     key={skill}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedSkill(skill);
+                    }}
                     className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded"
                   >
                     {skill}
-                  </span>
+                  </button>
                 ))}
+                {career.skills.length > 6 && (
+                  <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                    +{career.skills.length - 6} more
+                  </span>
+                )}
               </div>
             </div>
           </motion.div>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Career Detail Modal */}
       {selectedCareer && (
@@ -119,11 +188,20 @@ export default function CareerExplorer() {
               <X className="w-6 h-6" />
             </button>
 
-            <img
-              src={selectedCareer.image}
-              alt={selectedCareer.title}
-              className="w-full h-48 object-cover rounded-lg mb-6"
-            />
+            {selectedCareer.image ? (
+              <img
+                src={selectedCareer.image}
+                alt={selectedCareer.title}
+                onError={(e) => {
+                  e.currentTarget.src = `https://placehold.co/1200x800/png?text=${encodeURIComponent(
+                    selectedCareer.title
+                  )}`;
+                }}
+                className="w-full h-48 object-cover rounded-lg mb-6"
+              />
+            ) : (
+              <div className="w-full h-48 rounded-lg bg-gray-200 mb-6" />
+            )}
 
             <h2 className="text-3xl font-bold mb-2">{selectedCareer.title}</h2>
             <p className="text-gray-600 mb-6">{selectedCareer.field}</p>
@@ -156,15 +234,24 @@ export default function CareerExplorer() {
               <div>
                 <h3 className="font-bold mb-2">Key Skills</h3>
                 <div className="flex flex-wrap gap-2">
-                  {selectedCareer.skills.map((skill) => (
-                    <span
+                  {selectedCareer.skills.slice(0, 20).map((skill) => (
+                    <button
                       key={skill}
+                      onClick={() => {
+                        setSelectedCareer(null);
+                        setSelectedSkill(skill);
+                      }}
                       className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm"
                     >
                       {skill}
-                    </span>
+                    </button>
                   ))}
                 </div>
+                {selectedCareer.skills.length > 20 && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    Showing top 20 skills
+                  </p>
+                )}
               </div>
 
               <div className="glass-card p-4 bg-gradient-to-r from-blue-50 to-purple-50">

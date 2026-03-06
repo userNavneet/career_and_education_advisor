@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Send, Bot, User as UserIcon } from 'lucide-react';
 import { chatHistory as initialChatHistory } from '../../data/mockUsers';
 import { useAuth } from '../../contexts/AuthContext';
+import { request } from '../../services/api';
 
 export default function Chatbot() {
   const { user } = useAuth();
@@ -33,32 +34,43 @@ export default function Chatbot() {
     setInputMessage('');
     setIsTyping(true);
 
-    // Simulate bot response
-    setTimeout(() => {
+    try {
+      const data = await request('/chatbot/faq', {
+        method: 'POST',
+        body: JSON.stringify({ query: inputMessage, top_k: 3, min_score: 0.45 }),
+      });
+
+      let botText = "I could not find a strong match in the FAQ yet. Try rephrasing your question.";
+      const matches = data?.matches || [];
+      if (matches.length > 0) {
+        const top = matches[0];
+        botText = top.answer;
+        if (matches.length > 1) {
+          const related = matches
+            .slice(1, 3)
+            .map((m) => `- ${m.question}`)
+            .join('\n');
+          botText += `\n\nRelated topics:\n${related}`;
+        }
+      }
+
       const botResponse = {
         id: messages.length + 2,
-        message: generateBotResponse(inputMessage),
+        message: botText,
         sender: 'bot',
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, botResponse]);
+    } catch (err) {
+      const botResponse = {
+        id: messages.length + 2,
+        message: 'Chat service is currently unavailable. Please try again.',
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, botResponse]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
-  };
-
-  const generateBotResponse = (userInput) => {
-    const input = userInput.toLowerCase();
-
-    if (input.includes('career') || input.includes('job')) {
-      return "Based on your assessment results, you have great potential in Technology & Software and Engineering fields. Would you like me to suggest some specific career paths or tell you more about a particular field?";
-    } else if (input.includes('college') || input.includes('university')) {
-      return "I can help you find colleges that match your preferences! What factors are most important to you? Location, cost, specific programs, or campus size?";
-    } else if (input.includes('scholarship')) {
-      return "Great question! There are several scholarships you might be eligible for. I recommend checking out the Gates Scholarship, National Merit Scholarship, and field-specific awards. Would you like details on any of these?";
-    } else if (input.includes('thanks') || input.includes('thank you')) {
-      return "You're welcome! I'm here to help you with your career and education journey. Feel free to ask me anything!";
-    } else {
-      return "That's an interesting question! I can help you with career exploration, college selection, scholarships, and study resources. What would you like to know more about?";
     }
   };
 
