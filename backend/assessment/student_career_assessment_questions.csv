@@ -1,0 +1,21 @@
+question_id,question,category
+1,I enjoy solving logical or mathematical problems,Science & Research
+2,I like writing computer programs or learning coding languages,Technology & Software
+3,"I enjoy designing graphics, illustrations, or visual content",Design & Creative
+4,I like leading teams or organizing projects,Business & Management
+5,I enjoy helping people solve personal or social problems,Nonprofit & Social Work
+6,I like analyzing financial data or understanding investments,Finance & Banking
+7,I enjoy explaining concepts or helping others learn new things,Education & Teaching
+8,"I enjoy building or fixing machines, structures, or technical systems",Engineering
+9,"I like creating videos, music, or storytelling content",Arts & Media
+10,I am interested in understanding diseases and improving health,Healthcare & Medicine
+11,"I enjoy debating laws, policies, or justice systems",Law & Legal
+12,I am interested in working with government policies or public administration,Government & Public Service
+13,"I enjoy developing software, apps, or digital tools",Technology & Software
+14,"I enjoy sketching, designing layouts, or creating visual experiences",Design & Creative
+15,I enjoy conducting experiments or discovering new knowledge,Science & Research
+16,I enjoy planning business strategies or managing organizations,Business & Management
+17,"I enjoy mentoring, teaching, or guiding students",Education & Teaching
+18,I am interested in working in hospitals or helping patients,Healthcare & Medicine
+19,"I enjoy financial planning, banking operations, or investment analysis",Finance & Banking
+20,I enjoy supporting communities and improving social welfare,Nonprofit & Social Work

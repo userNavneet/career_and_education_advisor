@@ -33,13 +33,7 @@ export default function Login() {
     setLoading(false);
   };
 
-  const quickLogin = (role) => {
-    const credentials = {
-      student: { email: 'student@example.com', password: 'student123' },
-      admin: { email: 'admin@example.com', password: 'admin123' },
-    };
-    setFormData(credentials[role]);
-  };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -136,26 +130,7 @@ export default function Login() {
             </p>
           </div>
 
-          {/* Demo Credentials */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-sm text-center text-gray-600 mb-3">Quick Login (Demo)</p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => quickLogin('student')}
-                className="btn-secondary text-sm py-2"
-              >
-                Student
-              </button>
-              <button
-                type="button"
-                onClick={() => quickLogin('admin')}
-                className="btn-secondary text-sm py-2"
-              >
-                Admin
-              </button>
-            </div>
-          </div>
+
         </div>
       </motion.div>
     </div>

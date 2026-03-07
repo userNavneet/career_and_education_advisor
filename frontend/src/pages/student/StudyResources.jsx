@@ -20,13 +20,13 @@ export default function StudyResources() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Study Resources</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Study Resources</h1>
         <p className="text-gray-600">Access free learning materials and test preparation</p>
       </div>
 
       {/* Search and Filters */}
       <div className="glass-card p-4 mb-6">
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
@@ -55,7 +55,7 @@ export default function StudyResources() {
       </div>
 
       {/* Resources Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredResources.map((resource, index) => (
           <motion.div
             key={resource.id}

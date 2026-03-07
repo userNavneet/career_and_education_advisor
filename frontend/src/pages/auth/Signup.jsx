@@ -2,14 +2,13 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { motion } from 'framer-motion';
-import { GraduationCap, Mail, Lock, User, Eye, EyeOff, UserCircle } from 'lucide-react';
+import { GraduationCap, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 
 export default function Signup() {
   const navigate = useNavigate();
   const { signup } = useAuth();
-  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    role: '',
+    role: 'student',
     firstName: '',
     lastName: '',
     email: '',
@@ -19,26 +18,6 @@ export default function Signup() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const roles = [
-    {
-      id: 'student',
-      title: 'Student',
-      description: 'Explore careers, colleges, and get personalized guidance',
-      icon: '🎓',
-    },
-    {
-      id: 'admin',
-      title: 'Administrator',
-      description: 'Manage platform content, guide students, and oversee accounts',
-      icon: '⚙️',
-    },
-  ];
-
-  const handleRoleSelect = (role) => {
-    setFormData({ ...formData, role });
-    setStep(2);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -58,11 +37,7 @@ export default function Signup() {
     const result = await signup(formData);
 
     if (result.success) {
-      const redirectMap = {
-        student: '/student/dashboard',
-        admin: '/admin/dashboard',
-      };
-      navigate(redirectMap[result.user.role] || '/');
+      navigate('/student/dashboard');
     } else {
       setError(result.error || 'Signup failed');
     }
@@ -92,55 +67,12 @@ export default function Signup() {
         </div>
 
         <div className="glass-card p-8">
-          {/* Step 1: Role Selection */}
-          {step === 1 && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-            >
-              <h2 className="text-2xl font-bold mb-6 text-center">Choose Your Role</h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                {roles.map((role) => (
-                  <motion.button
-                    key={role.id}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handleRoleSelect(role.id)}
-                    className="glass-card p-6 text-center hover:shadow-glass-lg transition-all"
-                  >
-                    <div className="text-5xl mb-3">{role.icon}</div>
-                    <h3 className="font-bold text-lg mb-2">{role.title}</h3>
-                    <p className="text-sm text-gray-600">{role.description}</p>
-                  </motion.button>
-                ))}
-              </div>
-
-              <div className="mt-6 text-center">
-                <p className="text-sm text-gray-600">
-                  Already have an account?{' '}
-                  <Link to="/login" className="text-blue-600 hover:underline font-medium">
-                    Log in
-                  </Link>
-                </p>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Step 2: Registration Form */}
-          {step === 2 && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-            >
-              <button
-                onClick={() => setStep(1)}
-                className="text-blue-600 hover:underline mb-4 flex items-center gap-2"
-              >
-                ← Back to role selection
-              </button>
-
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+          >
               <h2 className="text-2xl font-bold mb-6 text-center">
-                Create Your {formData.role} Account
+                Create Your Account
               </h2>
 
               {error && (
@@ -256,8 +188,16 @@ export default function Signup() {
                   {loading ? 'Creating Account...' : 'Create Account'}
                 </button>
               </form>
+
+              <div className="mt-6 text-center">
+                <p className="text-sm text-gray-600">
+                  Already have an account?{' '}
+                  <Link to="/login" className="text-blue-600 hover:underline font-medium">
+                    Log in
+                  </Link>
+                </p>
+              </div>
             </motion.div>
-          )}
         </div>
       </motion.div>
     </div>

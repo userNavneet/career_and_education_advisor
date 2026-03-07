@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { users } from '../data/mockUsers';
+import { authAPI } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -16,49 +16,53 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is stored in localStorage
+    const token = localStorage.getItem('authToken');
     const storedUser = localStorage.getItem('user');
-    if (storedUser) {
+    if (token && storedUser) {
       setUser(JSON.parse(storedUser));
+      // Validate token with backend
+      authAPI.me().then((res) => {
+        setUser(res.data);
+        localStorage.setItem('user', JSON.stringify(res.data));
+      }).catch(() => {
+        // Token expired or invalid
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        setUser(null);
+      });
     }
     setLoading(false);
   }, []);
 
   const login = async (email, password) => {
-    // Mock login - check against dummy data
-    const foundUser = Object.values(users).find(
-      (u) => u.email === email && u.password === password
-    );
-
-    if (foundUser) {
-      setUser(foundUser);
-      localStorage.setItem('user', JSON.stringify(foundUser));
-      return { success: true, user: foundUser };
+    try {
+      const res = await authAPI.login(email, password);
+      const { token, user: userData } = res.data;
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+      return { success: true, user: userData };
+    } catch (err) {
+      return { success: false, error: err.response?.data?.detail || 'Login failed' };
     }
-
-    return { success: false, error: 'Invalid credentials' };
   };
 
   const signup = async (userData) => {
-    // Mock signup - in real app, would make API call
-    const newUser = {
-      ...userData,
-      id: `user-${Date.now()}`,
-      role: userData.role || 'student',
-      profile: {
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-      },
-    };
-
-    setUser(newUser);
-    localStorage.setItem('user', JSON.stringify(newUser));
-    return { success: true, user: newUser };
+    try {
+      const res = await authAPI.signup(userData);
+      const { token, user: newUser } = res.data;
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('user', JSON.stringify(newUser));
+      setUser(newUser);
+      return { success: true, user: newUser };
+    } catch (err) {
+      return { success: false, error: err.response?.data?.detail || 'Signup failed' };
+    }
   };
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem('authToken');
     localStorage.removeItem('user');
   };
 
@@ -68,12 +72,24 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
+  const refreshUser = async () => {
+    try {
+      const res = await authAPI.me();
+      setUser(res.data);
+      localStorage.setItem('user', JSON.stringify(res.data));
+      return res.data;
+    } catch {
+      return null;
+    }
+  };
+
   const value = {
     user,
     login,
     signup,
     logout,
     updateProfile,
+    refreshUser,
     loading,
     isAuthenticated: !!user,
   };

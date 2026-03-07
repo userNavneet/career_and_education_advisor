@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Send, Bot, User as UserIcon } from 'lucide-react';
-import { chatHistory as initialChatHistory } from '../../data/mockUsers';
 import { useAuth } from '../../contexts/AuthContext';
+import { chatbotAPI } from '../../services/api';
 
 export default function Chatbot() {
   const { user } = useAuth();
-  const [messages, setMessages] = useState(initialChatHistory);
+  const [messages, setMessages] = useState([
+    { id: 0, sender: 'bot', message: `Hello${user?.profile?.firstName ? `, ${user.profile.firstName}` : ''}! I'm your EduCareer assistant. I can help you with career exploration, college selection, scholarships, and study resources. How can I help you today?`, timestamp: new Date().toISOString() },
+  ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
@@ -29,43 +31,89 @@ export default function Chatbot() {
       timestamp: new Date().toISOString(),
     };
 
-    setMessages([...messages, userMessage]);
+    const currentInput = inputMessage;
+    setMessages((prev) => [...prev, userMessage]);
     setInputMessage('');
     setIsTyping(true);
 
-    // Simulate bot response
-    setTimeout(() => {
+    const userContext = {
+      firstName: user?.profile?.firstName || null,
+      interests: user?.interests || [],
+      topCategories: user?.assessmentStatus?.results?.topCategories || [],
+      hasAssessment: !!user?.assessmentStatus?.completed,
+      school: user?.academicInfo?.school || null,
+      scores: user?.assessmentStatus?.results?.scores || null,
+    };
+
+    try {
+      const response = await chatbotAPI.ask(currentInput, userContext);
       const botResponse = {
         id: messages.length + 2,
-        message: generateBotResponse(inputMessage),
+        message: response.data.answer,
         sender: 'bot',
         timestamp: new Date().toISOString(),
+        source: response.data.source,
       };
       setMessages((prev) => [...prev, botResponse]);
+    } catch {
+      // Fallback to local response if backend is unavailable
+      const botResponse = {
+        id: messages.length + 2,
+        message: generateBotResponse(currentInput),
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        source: 'offline',
+      };
+      setMessages((prev) => [...prev, botResponse]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const generateBotResponse = (userInput) => {
     const input = userInput.toLowerCase();
+    const firstName = user?.profile?.firstName || 'there';
+    const topCategories = user?.assessmentStatus?.results?.topCategories || [];
+    const hasAssessment = user?.assessmentStatus?.completed;
+    const school = user?.academicInfo?.school;
+    const interests = user?.interests || [];
 
     if (input.includes('career') || input.includes('job')) {
-      return "Based on your assessment results, you have great potential in Technology & Software and Engineering fields. Would you like me to suggest some specific career paths or tell you more about a particular field?";
+      if (hasAssessment && topCategories.length > 0) {
+        return `Based on your assessment results, ${firstName}, your top career fields are: ${topCategories.join(', ')}. Would you like to explore specific careers in any of these fields? You can also visit the Career Explorer page for detailed information.`;
+      }
+      return `Hi ${firstName}! To give you personalized career recommendations, I'd suggest taking the Career Assessment first. It only takes a few minutes and will help me understand your strengths and interests. Would you like to know more about any specific career field in the meantime?`;
     } else if (input.includes('college') || input.includes('university')) {
-      return "I can help you find colleges that match your preferences! What factors are most important to you? Location, cost, specific programs, or campus size?";
+      let response = `I can help you find the right college, ${firstName}! `;
+      if (hasAssessment && topCategories.length > 0) {
+        response += `Since your top fields are ${topCategories.join(' and ')}, I'd recommend looking at colleges with strong programs in those areas. `;
+      }
+      response += 'Check out our College Directory for an AI-powered search across 70,000+ colleges. What factors matter most to you — location, cost, specific programs, or campus size?';
+      return response;
     } else if (input.includes('scholarship')) {
-      return "Great question! There are several scholarships you might be eligible for. I recommend checking out the Gates Scholarship, National Merit Scholarship, and field-specific awards. Would you like details on any of these?";
+      return `Great question, ${firstName}! There are many scholarships available based on academic merit, financial need, and specific fields of study. ${hasAssessment ? `Given your interest in ${topCategories[0]}, look for field-specific scholarships too. ` : ''}Visit our Scholarships page to browse opportunities and filter by category. Would you like tips on strengthening your scholarship applications?`;
+    } else if (input.includes('assessment') || input.includes('test')) {
+      if (hasAssessment) {
+        return `You've already completed your assessment, ${firstName}! Your top career fields are: ${topCategories.join(', ')}. You can retake it anytime if your interests have changed. Would you like to explore careers in your recommended fields?`;
+      }
+      return `The Career Assessment is a quick questionnaire that helps identify your strengths and interests across 12 career fields, ${firstName}. It takes about 5-10 minutes and will give you personalized career recommendations. Head to the Assessment page to get started!`;
+    } else if (input.includes('resource') || input.includes('study') || input.includes('learn')) {
+      return `We have curated study resources including Khan Academy, Coursera, MIT OpenCourseWare, and more, ${firstName}. ${hasAssessment ? `Since you're interested in ${topCategories[0]}, I'd recommend focusing on resources related to that field. ` : ''}Check out the Study Resources page to start learning!`;
+    } else if (input.includes('profile') || input.includes('account')) {
+      return `You can update your personal info, academic details, and interests on the Profile page, ${firstName}. ${school ? `I see you're at ${school}. ` : ''}A complete profile helps us give better recommendations. Your profile is currently ${user?.profileCompletion || 0}% complete.`;
+    } else if (input.includes('hello') || input.includes('hi') || input.includes('hey')) {
+      return `Hey ${firstName}! 👋 How can I help you today? I can assist with career exploration${hasAssessment ? ' (your top fields: ' + topCategories.join(', ') + ')' : ''}, college search, scholarships, study resources, and more!`;
     } else if (input.includes('thanks') || input.includes('thank you')) {
-      return "You're welcome! I'm here to help you with your career and education journey. Feel free to ask me anything!";
+      return `You're welcome, ${firstName}! I'm always here to help with your career and education journey. Feel free to ask me anything anytime!`;
     } else {
-      return "That's an interesting question! I can help you with career exploration, college selection, scholarships, and study resources. What would you like to know more about?";
+      return `That's a great question, ${firstName}! I can help you with:\n\n• **Career Exploration** — discover careers matching your skills\n• **College Search** — find the perfect college\n• **Scholarships** — browse funding opportunities\n• **Study Resources** — access free learning materials\n• **Assessment** — take a career aptitude test\n\nWhat would you like to explore?`;
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto h-[calc(100vh-12rem)] flex flex-col">
+    <div className="max-w-4xl mx-auto h-[calc(100vh-10rem)] sm:h-[calc(100vh-12rem)] flex flex-col">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">AI Career Advisor</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">AI Career Advisor</h1>
         <p className="text-gray-600">Get personalized guidance for your career journey</p>
       </div>
 
@@ -87,7 +135,7 @@ export default function Chatbot() {
               )}
 
               <div
-                className={`max-w-[70%] p-4 rounded-2xl ${
+                className={`max-w-[85%] sm:max-w-[70%] p-3 sm:p-4 rounded-2xl ${
                   msg.sender === 'user'
                     ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
                     : 'glass-card'
@@ -157,7 +205,7 @@ export default function Chatbot() {
       </div>
 
       {/* Quick Questions */}
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-3 sm:mt-4 flex flex-wrap gap-2">
         {[
           'What careers match my skills?',
           'Help me find colleges',
