@@ -20,7 +20,7 @@ export default function Documentation() {
         {
             title: "Project Overview",
             icon: BookOpen,
-            content: "EduGuide (cloned from EduPath) is a comprehensive educational guidance platform built on Base44. It helps Indian students make informed academic and career decisions through personalized assessments, career exploration, college directory, and AI-powered guidance."
+            content: "EduCareer is a comprehensive educational guidance platform. It helps students make informed academic and career decisions through personalized assessments, career exploration, college directory, and AI-powered guidance."
         },
         {
             title: "Technology Stack",
@@ -250,7 +250,7 @@ const response = await base44.integrations.Core.InvokeLLM({
                         Technical Documentation
                     </h1>
                     <p className="text-lg text-slate-600 max-w-3xl mx-auto">
-                        Complete technical overview of the EduGuide platform - architecture, data models, features, and implementation details
+                        Complete technical overview of the EduCareer platform - architecture, data models, features, and implementation details
                     </p>
                     <div className="mt-6 flex justify-center gap-4">
                         <Badge className="text-sm">Base44 Platform</Badge>

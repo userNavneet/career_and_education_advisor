@@ -28,15 +28,9 @@ export default function Signup() {
       icon: '🎓',
     },
     {
-      id: 'counselor',
-      title: 'Counselor',
-      description: 'Guide and mentor students in their career journey',
-      icon: '👨‍🏫',
-    },
-    {
       id: 'admin',
       title: 'Administrator',
-      description: 'Manage platform content and user accounts',
+      description: 'Manage platform content, guide students, and oversee accounts',
       icon: '⚙️',
     },
   ];
@@ -66,7 +60,6 @@ export default function Signup() {
     if (result.success) {
       const redirectMap = {
         student: '/student/dashboard',
-        counselor: '/counselor/dashboard',
         admin: '/admin/dashboard',
       };
       navigate(redirectMap[result.user.role] || '/');
@@ -94,7 +87,7 @@ export default function Signup() {
           >
             <GraduationCap className="w-10 h-10 text-blue-600" />
           </motion.div>
-          <h1 className="text-4xl font-bold text-gradient mb-2">Join EduGuide</h1>
+          <h1 className="text-4xl font-bold text-gradient mb-2">Join EduCareer</h1>
           <p className="text-gray-600">Start your journey to the perfect career</p>
         </div>
 
@@ -106,7 +99,7 @@ export default function Signup() {
               animate={{ opacity: 1, x: 0 }}
             >
               <h2 className="text-2xl font-bold mb-6 text-center">Choose Your Role</h2>
-              <div className="grid md:grid-cols-3 gap-4">
+              <div className="grid md:grid-cols-2 gap-4">
                 {roles.map((role) => (
                   <motion.button
                     key={role.id}

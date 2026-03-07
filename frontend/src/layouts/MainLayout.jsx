@@ -43,16 +43,10 @@ export default function MainLayout() {
         { icon: MessageSquare, label: 'AI Chatbot', path: `${baseUrl}/chatbot` },
         { icon: User, label: 'Profile', path: `${baseUrl}/profile` },
       ],
-      counselor: [
-        { icon: LayoutDashboard, label: 'Dashboard', path: `${baseUrl}/dashboard` },
-        { icon: Users, label: 'My Students', path: `${baseUrl}/students` },
-        { icon: Compass, label: 'Career Resources', path: `${baseUrl}/careers` },
-        { icon: Building2, label: 'College Database', path: `${baseUrl}/colleges` },
-        { icon: Calendar, label: 'Schedule', path: `${baseUrl}/schedule` },
-        { icon: User, label: 'Profile', path: `${baseUrl}/profile` },
-      ],
       admin: [
         { icon: LayoutDashboard, label: 'Dashboard', path: `${baseUrl}/dashboard` },
+        { icon: Users, label: 'My Students', path: `${baseUrl}/students` },
+        { icon: Calendar, label: 'Schedule', path: `${baseUrl}/schedule` },
         { icon: Compass, label: 'Manage Careers', path: `${baseUrl}/careers` },
         { icon: Building2, label: 'Manage Colleges', path: `${baseUrl}/colleges` },
         { icon: BookOpen, label: 'Manage Resources', path: `${baseUrl}/resources` },
@@ -91,7 +85,7 @@ export default function MainLayout() {
                     <GraduationCap className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h1 className="font-bold text-lg">EduGuide</h1>
+                    <h1 className="font-bold text-lg">EduCareer</h1>
                     <p className="text-xs text-gray-600 capitalize">{user?.role}</p>
                   </div>
                 </div>

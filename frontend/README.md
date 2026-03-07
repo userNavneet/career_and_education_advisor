@@ -1,4 +1,4 @@
-# EduGuide - Career & Education Advisor Frontend
+# EduCareer - Career & Education Advisor Frontend
 
 A modern, glassmorphism-styled web application for career and education guidance built with React, Tailwind CSS, and Framer Motion.
 
