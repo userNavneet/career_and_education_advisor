@@ -245,6 +245,15 @@ class TimelineItemOut(TimelineItemBase):
     updated_at: datetime
 
 
+class TimelineImportantOut(BaseModel):
+    id: str
+    title: str
+    date: str
+    category: str
+    source: Optional[str] = None
+    notes: Optional[str] = None
+
+
 class SessionBase(BaseModel):
     student_id: str
     counselor_id: str
