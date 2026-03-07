@@ -37,10 +37,10 @@ export default function StudentDashboard() {
     .slice(0, 4);
 
   const quickLinks = [
-    { icon: FileText, label: 'Take Assessment', path: '/student/assessment', color: 'blue' },
-    { icon: Target, label: 'Explore Careers', path: '/student/careers', color: 'purple' },
-    { icon: MapPin, label: 'Find Colleges', path: '/student/colleges', color: 'green' },
-    { icon: BookOpen, label: 'Study Resources', path: '/student/resources', color: 'orange' },
+    { icon: FileText, label: 'Take Assessment', path: '/student/assessment', gradient: 'from-blue-400 to-blue-600' },
+    { icon: Target, label: 'Explore Careers', path: '/student/careers', gradient: 'from-purple-400 to-purple-600' },
+    { icon: MapPin, label: 'Find Colleges', path: '/student/colleges', gradient: 'from-green-400 to-green-600' },
+    { icon: BookOpen, label: 'Study Resources', path: '/student/resources', gradient: 'from-orange-400 to-orange-600' },
   ];
 
   return (
@@ -106,7 +106,7 @@ export default function StudentDashboard() {
             className="glass-card-hover p-6 text-center group"
           >
             <div
-              className={`w-12 h-12 rounded-xl bg-gradient-to-br from-${link.color}-400 to-${link.color}-600 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform`}
+              className={`w-12 h-12 rounded-xl bg-gradient-to-br ${link.gradient} flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform`}
             >
               <link.icon className="w-6 h-6 text-white" />
             </div>

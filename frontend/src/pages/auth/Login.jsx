@@ -23,7 +23,6 @@ export default function Login() {
       // Redirect based on role
       const redirectMap = {
         student: '/student/dashboard',
-        counselor: '/counselor/dashboard',
         admin: '/admin/dashboard',
       };
       navigate(redirectMap[result.user.role] || '/');
@@ -37,7 +36,6 @@ export default function Login() {
   const quickLogin = (role) => {
     const credentials = {
       student: { email: 'student@example.com', password: 'student123' },
-      counselor: { email: 'counselor@example.com', password: 'counselor123' },
       admin: { email: 'admin@example.com', password: 'admin123' },
     };
     setFormData(credentials[role]);
@@ -60,7 +58,7 @@ export default function Login() {
           >
             <GraduationCap className="w-10 h-10 text-blue-600" />
           </motion.div>
-          <h1 className="text-4xl font-bold text-gradient mb-2">EduGuide</h1>
+          <h1 className="text-4xl font-bold text-gradient mb-2">EduCareer</h1>
           <p className="text-gray-600">Your Career & Education Advisor</p>
         </div>
 
@@ -141,20 +139,13 @@ export default function Login() {
           {/* Demo Credentials */}
           <div className="mt-6 pt-6 border-t border-gray-200">
             <p className="text-sm text-center text-gray-600 mb-3">Quick Login (Demo)</p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => quickLogin('student')}
                 className="btn-secondary text-sm py-2"
               >
                 Student
-              </button>
-              <button
-                type="button"
-                onClick={() => quickLogin('counselor')}
-                className="btn-secondary text-sm py-2"
-              >
-                Counselor
               </button>
               <button
                 type="button"

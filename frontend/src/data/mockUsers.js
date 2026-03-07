@@ -44,21 +44,6 @@ export const users = {
     savedCareers: [1, 2, 6],
     appliedScholarships: [1, 3],
   },
-  counselor: {
-    id: "counselor-1",
-    role: "counselor",
-    email: "counselor@example.com",
-    password: "counselor123",
-    profile: {
-      firstName: "Dr. Sarah",
-      lastName: "Williams",
-      phone: "+1-234-567-8901",
-      specialization: "Career Counseling",
-      yearsOfExperience: 12,
-      avatar: "https://i.pravatar.cc/150?img=5",
-    },
-    assignedStudents: ["student-1", "student-2", "student-3"],
-  },
   admin: {
     id: "admin-1",
     role: "admin",

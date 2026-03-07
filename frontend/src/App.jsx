@@ -22,8 +22,7 @@ import Scholarships from './pages/student/Scholarships';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminCareers from './pages/admin/ManageCareers';
 
-// Counselor Pages
-import CounselorDashboard from './pages/counselor/Dashboard';
+
 
 function App() {
   return (
@@ -68,25 +67,10 @@ function App() {
             <Route path="colleges" element={<AdminCareers />} />
             <Route path="resources" element={<AdminCareers />} />
             <Route path="scholarships" element={<AdminCareers />} />
+            <Route path="students" element={<AdminDashboard />} />
+            <Route path="schedule" element={<AdminDashboard />} />
             <Route path="users" element={<AdminDashboard />} />
             <Route path="settings" element={<AdminDashboard />} />
-          </Route>
-
-          {/* Counselor Routes */}
-          <Route
-            path="/counselor/*"
-            element={
-              <ProtectedRoute allowedRoles={['counselor']}>
-                <MainLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="dashboard" element={<CounselorDashboard />} />
-            <Route path="students" element={<CounselorDashboard />} />
-            <Route path="careers" element={<CareerExplorer />} />
-            <Route path="colleges" element={<CollegeDirectory />} />
-            <Route path="schedule" element={<CounselorDashboard />} />
-            <Route path="profile" element={<Profile />} />
           </Route>
 
           {/* Default Route */}
