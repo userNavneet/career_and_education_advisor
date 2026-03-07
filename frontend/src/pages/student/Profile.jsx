@@ -46,7 +46,7 @@ export default function Profile() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">My Profile</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">My Profile</h1>
         <p className="text-gray-600">Manage your personal information and preferences</p>
       </div>
 
@@ -56,12 +56,13 @@ export default function Profile() {
         animate={{ opacity: 1, y: 0 }}
         className="glass-card p-8 mb-6"
       >
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-6">
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
             <img
               src={user?.profile?.avatar || `https://i.pravatar.cc/150?img=${user?.id}`}
               alt={user?.profile?.firstName}
-              className="w-24 h-24 rounded-full border-4 border-white shadow-lg"
+              className="w-24 h-24 rounded-full border-4 border-white shadow-lg bg-gradient-to-br from-blue-200 to-purple-200"
+              onError={(e) => { e.target.onerror = null; e.target.src = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22/>'; e.target.className = 'w-24 h-24 rounded-full border-4 border-white shadow-lg bg-gradient-to-br from-blue-400 to-purple-500'; }}
             />
             <div>
               <h2 className="text-2xl font-bold">
@@ -69,7 +70,7 @@ export default function Profile() {
               </h2>
               <p className="text-gray-600">{user?.email}</p>
               <div className="flex items-center gap-2 mt-2">
-                <div className="h-2 w-48 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-2 w-32 sm:w-48 bg-gray-200 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-blue-500 to-purple-600"
                     style={{ width: `${user?.profileCompletion}%` }}
@@ -325,7 +326,7 @@ export default function Profile() {
                 <div>
                   <p className="text-sm font-medium mb-2">Top Career Fields:</p>
                   <div className="space-y-1">
-                    {user.assessmentStatus.results.topFields?.map((field, index) => (
+                    {user.assessmentStatus.results?.topCategories?.map((field, index) => (
                       <div key={field} className="flex items-center gap-2">
                         <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
                           #{index + 1}
@@ -338,7 +339,7 @@ export default function Profile() {
 
                 <div>
                   <p className="text-sm text-gray-600">
-                    Last taken: {new Date(user.assessmentStatus.lastTaken).toLocaleDateString()}
+                    Last taken: {new Date(user.assessmentStatus.completedAt).toLocaleDateString()}
                   </p>
                 </div>
               </>

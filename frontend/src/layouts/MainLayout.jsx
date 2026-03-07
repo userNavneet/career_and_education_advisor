@@ -68,16 +68,77 @@ export default function MainLayout() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Sidebar */}
+      {/* Desktop Sidebar - always visible on md+ */}
+      <aside className="hidden md:flex sticky top-0 left-0 h-screen w-64 glass-card border-r border-white/20 z-50 flex-col">
+        {/* Logo */}
+        <div className="p-6 border-b border-white/20">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+              <GraduationCap className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="font-bold text-lg">EduCareer</h1>
+              <p className="text-xs text-gray-600 capitalize">{user?.role}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-4 overflow-y-auto">
+          <ul className="space-y-2">
+            {navigationItems.map((item) => (
+              <li key={item.path}>
+                <button
+                  onClick={() => navigate(item.path)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    location.pathname === item.path
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                      : 'hover:bg-white/50'
+                  }`}
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span className="font-medium">{item.label}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {/* User Info */}
+        <div className="p-4 border-t border-white/20">
+          <div className="flex items-center gap-3 mb-3">
+            <img
+              src={user?.profile?.avatar || `https://i.pravatar.cc/150?img=${user?.id}`}
+              alt={user?.profile?.firstName}
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-200 to-purple-200"
+              onError={(e) => { e.target.onerror = null; e.target.src = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22/>'; e.target.className = 'w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500'; }}
+            />
+            <div className="flex-1 min-w-0">
+              <p className="font-medium truncate">
+                {user?.profile?.firstName} {user?.profile?.lastName}
+              </p>
+              <p className="text-xs text-gray-600 truncate">{user?.email}</p>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-red-100 text-red-600 transition-all"
+          >
+            <LogOut className="w-5 h-5" />
+            <span className="font-medium">Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Mobile Sidebar - animated overlay */}
       <AnimatePresence>
-        {(sidebarOpen || window.innerWidth >= 768) && (
+        {sidebarOpen && (
           <motion.aside
             initial={{ x: -300 }}
             animate={{ x: 0 }}
             exit={{ x: -300 }}
-            className="fixed md:sticky top-0 left-0 h-screen w-64 glass-card border-r border-white/20 z-50 flex flex-col"
+            className="fixed md:hidden top-0 left-0 h-screen w-64 glass-card border-r border-white/20 z-50 flex flex-col"
           >
-            {/* Logo */}
             <div className="p-6 border-b border-white/20">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -89,16 +150,12 @@ export default function MainLayout() {
                     <p className="text-xs text-gray-600 capitalize">{user?.role}</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => setSidebarOpen(false)}
-                  className="md:hidden"
-                >
+                <button onClick={() => setSidebarOpen(false)}>
                   <X className="w-6 h-6" />
                 </button>
               </div>
             </div>
 
-            {/* Navigation */}
             <nav className="flex-1 p-4 overflow-y-auto">
               <ul className="space-y-2">
                 {navigationItems.map((item) => (
@@ -122,13 +179,13 @@ export default function MainLayout() {
               </ul>
             </nav>
 
-            {/* User Info */}
             <div className="p-4 border-t border-white/20">
               <div className="flex items-center gap-3 mb-3">
                 <img
                   src={user?.profile?.avatar || `https://i.pravatar.cc/150?img=${user?.id}`}
                   alt={user?.profile?.firstName}
-                  className="w-10 h-10 rounded-full"
+                  className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-200 to-purple-200"
+                  onError={(e) => { e.target.onerror = null; e.target.src = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22/>'; e.target.className = 'w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500'; }}
                 />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">
@@ -189,7 +246,7 @@ export default function MainLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-y-auto">
           <Outlet />
         </main>
       </div>

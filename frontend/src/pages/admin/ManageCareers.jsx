@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Edit2, Trash2, Search } from 'lucide-react';
-import { careers } from '../../data/mockCareers';
+import { Plus, Edit2, Trash2, Search, Loader2 } from 'lucide-react';
+import { careersAPI } from '../../services/api';
 
 export default function AdminCareers() {
-  const [careersList, setCareersList] = useState(careers);
+  const [careersList, setCareersList] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCareer, setEditingCareer] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     field: '',
@@ -18,6 +20,15 @@ export default function AdminCareers() {
     growthRate: '',
     demandLevel: '',
   });
+
+  const loadCareers = () => {
+    careersAPI.list()
+      .then((res) => setCareersList(res.data.careers || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { loadCareers(); }, []);
 
   const filteredCareers = careersList.filter((career) =>
     career.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -47,39 +58,59 @@ export default function AdminCareers() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this career?')) {
-      setCareersList(careersList.filter((c) => c.id !== id));
+      try {
+        await careersAPI.delete(id);
+        setCareersList(careersList.filter((c) => c.id !== id));
+      } catch {
+        alert('Failed to delete career');
+      }
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
 
     const careerData = {
       ...formData,
-      skills: formData.skills.split(',').map((s) => s.trim()),
-      id: editingCareer?.id || Date.now(),
+      skills: typeof formData.skills === 'string' ? formData.skills.split(',').map((s) => s.trim()) : formData.skills,
       image: editingCareer?.image || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400',
     };
 
-    if (editingCareer) {
-      setCareersList(careersList.map((c) => (c.id === editingCareer.id ? careerData : c)));
-    } else {
-      setCareersList([...careersList, careerData]);
+    try {
+      if (editingCareer) {
+        await careersAPI.update(editingCareer.id, careerData);
+      } else {
+        await careersAPI.create(careerData);
+      }
+      loadCareers();
+      setIsModalOpen(false);
+    } catch {
+      alert('Failed to save career');
+    } finally {
+      setSaving(false);
     }
-
-    setIsModalOpen(false);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <span className="ml-3 text-lg">Loading careers...</span>
+      </div>
+    );
+  }
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Manage Careers</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Manage Careers</h1>
           <p className="text-gray-600">Add, edit, or remove career information</p>
         </div>
-        <button onClick={handleAdd} className="btn-primary flex items-center gap-2">
+        <button onClick={handleAdd} className="btn-primary flex items-center gap-2 whitespace-nowrap">
           <Plus className="w-5 h-5" />
           Add Career
         </button>
@@ -102,7 +133,7 @@ export default function AdminCareers() {
       {/* Careers Table */}
       <div className="glass-card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[600px]">
             <thead className="bg-white/50">
               <tr>
                 <th className="px-6 py-3 text-left text-sm font-semibold">Title</th>
@@ -172,7 +203,7 @@ export default function AdminCareers() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             onClick={(e) => e.stopPropagation()}
-            className="glass-card p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="glass-card p-4 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
           >
             <h2 className="text-2xl font-bold mb-6">
               {editingCareer ? 'Edit Career' : 'Add New Career'}
@@ -282,8 +313,8 @@ export default function AdminCareers() {
               </div>
 
               <div className="flex gap-3 pt-4">
-                <button type="submit" className="btn-primary flex-1">
-                  {editingCareer ? 'Update Career' : 'Add Career'}
+                <button type="submit" className="btn-primary flex-1" disabled={saving}>
+                  {saving ? 'Saving...' : editingCareer ? 'Update Career' : 'Add Career'}
                 </button>
                 <button
                   type="button"

@@ -20,13 +20,13 @@ export default function Scholarships() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Scholarships</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Scholarships</h1>
         <p className="text-gray-600">Find funding opportunities for your education</p>
       </div>
 
       {/* Search and Filters */}
       <div className="glass-card p-4 mb-6">
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
@@ -55,7 +55,7 @@ export default function Scholarships() {
       </div>
 
       {/* Scholarships Grid */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
         {filteredScholarships.map((scholarship, index) => (
           <motion.div
             key={scholarship.id}

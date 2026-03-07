@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import {
@@ -12,20 +13,29 @@ import {
   Star,
   Clock,
 } from 'lucide-react';
-import { careers } from '../../data/mockCareers';
 import { colleges } from '../../data/mockColleges';
 import { timelineEvents } from '../../data/mockScholarshipsAndResources';
 import { studyResources } from '../../data/mockScholarshipsAndResources';
 import { useNavigate } from 'react-router-dom';
+import { careersAPI } from '../../services/api';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [recommendedCareers, setRecommendedCareers] = useState([]);
 
-  // Get recommended careers based on assessment
-  const recommendedCareers = user?.assessmentStatus?.results?.recommendedCareers
-    ? careers.filter((c) => user.assessmentStatus.results.recommendedCareers.includes(c.id))
-    : careers.slice(0, 3);
+  const topCategories = user?.assessmentStatus?.results?.topCategories || [];
+
+  useEffect(() => {
+    careersAPI.list().then((res) => {
+      const allCareers = res.data.careers || [];
+      if (topCategories.length > 0) {
+        setRecommendedCareers(allCareers.filter((c) => topCategories.includes(c.field)).slice(0, 3));
+      } else {
+        setRecommendedCareers(allCareers.slice(0, 3));
+      }
+    }).catch(() => {});
+  }, [user]);
 
   // Get nearby colleges (mock - first 3)
   const nearbyColleges = colleges.slice(0, 3);
@@ -53,7 +63,7 @@ export default function StudentDashboard() {
       >
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">
               Welcome back, {user?.profile?.firstName}! 👋
             </h1>
             <p className="text-gray-600">
@@ -146,7 +156,8 @@ export default function StudentDashboard() {
                   <img
                     src={career.image}
                     alt={career.title}
-                    className="w-12 h-12 rounded-lg object-cover"
+                    className="w-12 h-12 rounded-lg object-cover bg-gradient-to-br from-blue-100 to-purple-100"
+                    onError={(e) => { e.target.onerror = null; e.target.src = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22/>'; e.target.className = 'w-12 h-12 rounded-lg bg-gradient-to-br from-blue-400 to-purple-500'; }}
                   />
                   <div className="flex-1">
                     <h3 className="font-semibold">{career.title}</h3>
@@ -195,7 +206,8 @@ export default function StudentDashboard() {
                   <img
                     src={college.image}
                     alt={college.name}
-                    className="w-12 h-12 rounded-lg object-cover"
+                    className="w-12 h-12 rounded-lg object-cover bg-gradient-to-br from-green-100 to-blue-100"
+                    onError={(e) => { e.target.onerror = null; e.target.src = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22/>'; e.target.className = 'w-12 h-12 rounded-lg bg-gradient-to-br from-green-400 to-blue-500'; }}
                   />
                   <div className="flex-1">
                     <h3 className="font-semibold">{college.name}</h3>

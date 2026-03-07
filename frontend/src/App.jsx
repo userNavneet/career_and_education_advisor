@@ -2,6 +2,36 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
 import MainLayout from './layouts/MainLayout';
+import React from 'react';
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 40, fontFamily: 'monospace' }}>
+          <h1 style={{ color: 'red' }}>Something went wrong</h1>
+          <pre style={{ whiteSpace: 'pre-wrap', marginTop: 20, background: '#f5f5f5', padding: 20, borderRadius: 8 }}>
+            {this.state.error?.message}
+            {'\n\n'}
+            {this.state.error?.stack}
+          </pre>
+          <button onClick={() => { this.setState({ hasError: false }); window.location.href = '/login'; }}
+            style={{ marginTop: 20, padding: '10px 20px', cursor: 'pointer' }}>
+            Go to Login
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // Auth Pages
 import Login from './pages/auth/Login';
@@ -26,6 +56,7 @@ import AdminCareers from './pages/admin/ManageCareers';
 
 function App() {
   return (
+    <ErrorBoundary>
     <Router>
       <AuthProvider>
         <Routes>
@@ -79,6 +110,7 @@ function App() {
         </Routes>
       </AuthProvider>
     </Router>
+    </ErrorBoundary>
   );
 }
 

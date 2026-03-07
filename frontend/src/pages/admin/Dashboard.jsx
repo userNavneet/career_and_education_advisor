@@ -1,42 +1,57 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Briefcase, Building2, BookOpen, Award, TrendingUp, Plus } from 'lucide-react';
+import { Users, Briefcase, Building2, BookOpen, Award, TrendingUp, Plus, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { adminAPI } from '../../services/api';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const [stats, setStats] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const stats = [
-    { icon: Users, label: 'Total Users', value: '1,234', change: '+12%', color: 'blue' },
-    { icon: Briefcase, label: 'Careers', value: '150', change: '+5', color: 'purple' },
-    { icon: Building2, label: 'Colleges', value: '500', change: '+23', color: 'green' },
-    { icon: Award, label: 'Scholarships', value: '89', change: '+8', color: 'yellow' },
-    { icon: BookOpen, label: 'Resources', value: '234', change: '+15', color: 'red' },
-  ];
+  useEffect(() => {
+    Promise.all([adminAPI.stats(), adminAPI.users()])
+      .then(([statsRes, usersRes]) => {
+        setStats(statsRes.data);
+        setUsers(usersRes.data.users || []);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const statCards = stats ? [
+    { icon: Users, label: 'Total Users', value: stats.totalUsers, color: 'blue' },
+    { icon: Users, label: 'Students', value: stats.totalStudents, color: 'indigo' },
+    { icon: Briefcase, label: 'Careers', value: stats.totalCareers, color: 'purple' },
+    { icon: Award, label: 'Assessments Done', value: stats.assessmentsCompleted, color: 'green' },
+    { icon: TrendingUp, label: 'Career Fields', value: stats.careerFields, color: 'yellow' },
+  ] : [];
 
   const quickActions = [
-    { icon: Briefcase, label: 'Add Career', path: '/admin/careers', color: 'blue' },
-    { icon: Building2, label: 'Add College', path: '/admin/colleges', color: 'purple' },
-    { icon: Award, label: 'Add Scholarship', path: '/admin/scholarships', color: 'green' },
-    { icon: BookOpen, label: 'Add Resource', path: '/admin/resources', color: 'orange' },
+    { icon: Briefcase, label: 'Manage Careers', path: '/admin/careers', color: 'blue' },
+    { icon: Users, label: 'View Users', path: '/admin/careers', color: 'purple' },
   ];
 
-  const recentActivity = [
-    { action: 'New user registration', user: 'John Doe', time: '5 minutes ago' },
-    { action: 'Career added', user: 'Admin', time: '1 hour ago' },
-    { action: 'College updated', user: 'Admin', time: '2 hours ago' },
-    { action: 'Scholarship published', user: 'Admin', time: '3 hours ago' },
-  ];
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <span className="ml-3 text-lg">Loading dashboard...</span>
+      </div>
+    );
+  }
 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Admin Dashboard</h1>
         <p className="text-gray-600">Manage platform content and monitor activity</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-        {stats.map((stat, index) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+        {statCards.map((stat, index) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
@@ -50,8 +65,7 @@ export default function AdminDashboard() {
               <stat.icon className="w-5 h-5 text-white" />
             </div>
             <h3 className="text-2xl font-bold mb-1">{stat.value}</h3>
-            <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
-            <span className="text-xs text-green-600 font-medium">{stat.change}</span>
+            <p className="text-sm text-gray-600">{stat.label}</p>
           </motion.div>
         ))}
       </div>
@@ -81,72 +95,54 @@ export default function AdminDashboard() {
         </div>
       </motion.div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Recent Activity */}
+      <div className="grid lg:grid-cols-1 gap-6">
+        {/* Registered Users */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           className="glass-card p-6"
         >
-          <h2 className="text-xl font-bold mb-4">Recent Activity</h2>
-          <div className="space-y-3">
-            {recentActivity.map((activity, index) => (
-              <div key={index} className="flex items-start gap-3 p-3 glass-card">
-                <div className="w-2 h-2 rounded-full bg-blue-500 mt-2"></div>
-                <div className="flex-1">
-                  <p className="font-medium text-sm">{activity.action}</p>
-                  <p className="text-xs text-gray-600">
-                    by {activity.user} • {activity.time}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* System Overview */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="glass-card p-6"
-        >
-          <h2 className="text-xl font-bold mb-4">System Overview</h2>
-          <div className="space-y-4">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Storage Used</span>
-                <span className="text-sm font-medium">65%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full w-[65%]"></div>
-              </div>
+          <h2 className="text-xl font-bold mb-4">Registered Users</h2>
+          {users.length === 0 ? (
+            <p className="text-gray-600">No users found.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[500px]">
+                <thead className="bg-white/50">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-sm font-semibold">Email</th>
+                    <th className="px-4 py-2 text-left text-sm font-semibold">Role</th>
+                    <th className="px-4 py-2 text-left text-sm font-semibold">Name</th>
+                    <th className="px-4 py-2 text-left text-sm font-semibold">Assessment</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {users.map((u) => (
+                    <tr key={u.email} className="hover:bg-white/30">
+                      <td className="px-4 py-3 text-sm">{u.email}</td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {u.role}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {u.profile?.firstName || '-'} {u.profile?.lastName || ''}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          u.assessmentStatus?.completed ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {u.assessmentStatus?.completed ? 'Completed' : 'Not taken'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">API Usage</span>
-                <span className="text-sm font-medium">42%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-gradient-to-r from-green-500 to-blue-600 h-2 rounded-full w-[42%]"></div>
-              </div>
-            </div>
-
-            <div className="pt-4 border-t border-gray-200">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Active Users</span>
-                <span className="text-lg font-bold text-blue-600">342</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Monthly Growth</span>
-              <div className="flex items-center gap-1">
-                <TrendingUp className="w-4 h-4 text-green-600" />
-                <span className="text-lg font-bold text-green-600">+18%</span>
-              </div>
-            </div>
-          </div>
+          )}
         </motion.div>
       </div>
     </div>

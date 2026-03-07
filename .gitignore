@@ -1,3 +1,11 @@
+# Large binary / generated files
+*.npy
+*.pkl
+*.h5
+*.pt
+*.bin
+*.onnx
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
