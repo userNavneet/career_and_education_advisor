@@ -1,966 +1,544 @@
-# Career & Education Advisor - Architecture & Data Flow
+# EduCareer - Architecture & Data Flow
 
-## 📊 System Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                          CLIENT LAYER (Browser)                          │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                           │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐        │
-│  │   Login    │  │   Signup   │  │  Student   │  │  Counselor │        │
-│  │   Page     │  │   Page     │  │  Dashboard │  │  Dashboard │        │
-│  └────────────┘  └────────────┘  └────────────┘  └────────────┘        │
-│                                                                           │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐        │
-│  │   Career   │  │  College   │  │ Assessment │  │   Admin    │        │
-│  │  Explorer  │  │ Directory  │  │    Quiz    │  │  Dashboard │        │
-│  └────────────┘  └────────────┘  └────────────┘  └────────────┘        │
-│                                                                           │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    ↓↑
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        ROUTING LAYER (React Router)                      │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                           │
-│  • Public Routes: /login, /signup                                        │
-│  • Protected Routes: /student/*, /counselor/*, /admin/*                 │
-│  • Role-based Access Control (RBAC)                                      │
-│                                                                           │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    ↓↑
-┌─────────────────────────────────────────────────────────────────────────┐
-│                     STATE MANAGEMENT (React Context)                     │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                           │
-│  ┌─────────────────────────────────────────────────────────┐            │
-│  │              AuthContext (Global State)                  │            │
-│  │  • user: { id, name, email, role }                       │            │
-│  │  • isAuthenticated: boolean                              │            │
-│  │  • login(email, password)                                │            │
-│  │  • signup(userData)                                      │            │
-│  │  • logout()                                              │            │
-│  │  • updateProfile(data)                                   │            │
-│  └─────────────────────────────────────────────────────────┘            │
-│                                                                           │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    ↓↑
-┌─────────────────────────────────────────────────────────────────────────┐
-│                       DATA LAYER (Mock Data - Current)                   │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                           │
-│  • mockUsers.js         → User authentication data                       │
-│  • mockCareers.js       → Career information (8 careers)                 │
-│  • mockColleges.js      → College database (6 colleges)                  │
-│  • mockAssessments.js   → Quiz questions (8 questions)                   │
-│  • mockScholarshipsAndResources.js → Scholarships & Resources            │
-│                                                                           │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    ↓↑
-┌─────────────────────────────────────────────────────────────────────────┐
-│                    PERSISTENCE LAYER (localStorage)                      │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                           │
-│  • user session data                                                     │
-│  • authentication token (future: JWT)                                    │
-│  • user preferences                                                      │
-│                                                                           │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 🔄 Complete User Flow Diagrams
-
-### 1️⃣ Authentication Flow
-
-```
-START
-  │
-  ├──→ User Visits Site
-  │         │
-  │         ↓
-  │    Is Authenticated?
-  │         │
-  │    ┌────┴────┐
-  │    NO       YES
-  │    │         │
-  │    ↓         ↓
-  │  Login    Redirect to
-  │  Page     Dashboard
-  │    │      (role-based)
-  │    ↓
-  │  Enter Credentials
-  │    │
-  │    ↓
-  │  AuthContext.login()
-  │    │
-  │    ↓
-  │  Validate against mockUsers
-  │    │
-  │    ├────────────┐
-  │    │            │
-  │  Valid      Invalid
-  │    │            │
-  │    ↓            ↓
-  │  Set User    Show Error
-  │  State       Message
-  │    │            │
-  │    ↓            └──→ Retry
-  │  Save to
-  │  localStorage
-  │    │
-  │    ↓
-  │  Redirect to Dashboard
-  │    │
-  │    ├─────────────┬─────────────┐
-  │    │             │             │
-  │  Student      Counselor      Admin
-  │    │             │             │
-  │    ↓             ↓             ↓
-  │  /student/   /counselor/   /admin/
-  │  dashboard    dashboard    dashboard
-  │
-END
-```
-
-### 2️⃣ Student Assessment Flow
-
-```
-START: Student Dashboard
-  │
-  ↓
-Navigate to Assessment Page
-  │
-  ↓
-Load mockAssessments.js
-  │
-  ↓
-Display Question 1/8
-  │
-  ↓
-┌─────────────────┐
-│  User selects   │
-│  answer option  │
-└─────────────────┘
-  │
-  ↓
-Store answer in state
-  │
-  ↓
-More questions? ──YES──→ Next Question ──┐
-  │                                        │
-  NO                                       │
-  │                                        │
-  ↓                                        │
-Calculate Scores                           │
-  │                                        │
-  ├──→ For each question:                 │
-  │      • Get selected option            │
-  │      • Extract weighted scores        │
-  │      • Add to field totals            │
-  │      (tech, healthcare, business,     │
-  │       creative, education, etc.)      │
-  │                                        │
-  ↓                                        │
-Rank all fields by score                   │
-  │                                        │
-  ↓                                        │
-Get Top 3 Fields                           │
-  │                                        │
-  ↓                                        │
-Load mockCareers.js                        │
-  │                                        │
-  ↓                                        │
-Filter careers by top fields               │
-  │                                        │
-  ↓                                        │
-Display Results Page                       │
-  │                                        │
-  ├──→ Recommended Fields                 │
-  ├──→ Matching Careers                   │
-  ├──→ Suggested Colleges                 │
-  ├──→ Next Steps                         │
-  │                                        │
-  ↓                                        │
-User can:                                  │
-  • View Career Details                    │
-  • Explore Colleges                       │
-  • Retake Assessment ─────────────────────┘
-  • Save Results
-  │
-END
-```
-
-### 3️⃣ Career Explorer Flow
-
-```
-START: Navigate to Career Explorer
-  │
-  ↓
-Load mockCareers.js (8 careers)
-  │
-  ↓
-Display Career Grid
-  │
-  ├──→ Search by keyword
-  │      │
-  │      ↓
-  │    Filter careers by:
-  │      • Title match
-  │      • Field match
-  │      • Description match
-  │      │
-  │      ↓
-  │    Update display
-  │
-  ├──→ Filter by Field
-  │      │
-  │      ↓
-  │    Filter careers where:
-  │      • career.field === selectedField
-  │      │
-  │      ↓
-  │    Update display
-  │
-  ├──→ Click on Career Card
-  │      │
-  │      ↓
-  │    Open Modal with:
-  │      • Full description
-  │      • Required education
-  │      • Average salary
-  │      • Required skills
-  │      • Growth rate
-  │      • Demand level
-  │      │
-  │      ↓
-  │    User can:
-  │      • Add to favorites
-  │      • Compare careers
-  │      • Close modal
-  │
-END
-```
-
-### 4️⃣ Admin CRUD Flow (Manage Careers)
-
-```
-START: Admin Dashboard
-  │
-  ↓
-Navigate to Manage Careers
-  │
-  ↓
-Load careers from state
-  │
-  ↓
-Display Careers Table
-  │
-  ├──────────┬──────────┬──────────┬──────────┐
-  │          │          │          │          │
-CREATE    READ       UPDATE     DELETE    SEARCH
-  │          │          │          │          │
-  ↓          ↓          ↓          ↓          ↓
-Click     View      Click      Click     Enter
-"Add      All       "Edit"     "Delete"  Search
-Career"   Careers   Button     Button    Term
-  │          │          │          │          │
-  ↓          │          ↓          ↓          ↓
-Open       │       Open       Confirm   Filter
-Modal      │       Modal      Dialog    Table
-  │          │          │          │          │
-  ↓          │          ↓          │          │
-Fill       │       Edit       │          │
-Form:      │       Fields     │          │
-• Title    │          │          │          │
-• Field    │          ↓          │          │
-• Desc     │       Save       │          │
-• Salary   │       Changes    │          │
-• Edu      │          │          │          │
-• Skills   │          ↓          ↓          │
-• Growth   │       Update     Remove      │
-• Demand   │       State      from        │
-• Image    │          │       State       │
-  │          │          │          │          │
-  ↓          │          │          │          │
-Validate   │          │          │          │
-Input      │          │          │          │
-  │          │          │          │          │
-  ├─────┬────┴──────────┴──────────┴──────────┘
-  │     │
-Valid Invalid
-  │     │
-  ↓     ↓
-Add   Show
-to    Error
-State Message
-  │     │
-  ↓     └──→ Fix & Retry
-Save to
-Database (Future)
-  │
-  ↓
-Update UI
-  │
-  ↓
-Show Success
-Message
-  │
-END
-```
-
----
-
-## 🔀 Data Flow Pipeline
-
-### Complete Request-Response Cycle
+## System Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         USER INTERACTION                             │
-└─────────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────────┐
-│                       COMPONENT LAYER                                │
-│  • Button Click / Form Submit / Link Navigation                     │
-│  • Event Handler Triggered                                          │
-└─────────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────────┐
-│                       STATE MANAGEMENT                               │
+│                        CLIENT (Browser)                              │
 │                                                                      │
-│  ┌────────────────────────────────────────────────────┐            │
-│  │  AuthContext / Local Component State               │            │
-│  │  • Check permissions                                │            │
-│  │  • Update state variables                          │            │
-│  │  • Trigger re-renders                              │            │
-│  └────────────────────────────────────────────────────┘            │
+│  React 19 + Vite + Tailwind CSS + Framer Motion                     │
 │                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────────┐
-│                     DATA PROCESSING LAYER                            │
+│  ┌──────────┐  ┌──────────────┐  ┌──────────┐  ┌────────────────┐  │
+│  │ AuthCtx  │  │ ProtectedRoute│  │ MainLayout│  │  api.js (Axios)│  │
+│  │ (Context)│  │  (RBAC Guard) │  │ (Sidebar) │  │  (HTTP Client) │  │
+│  └──────────┘  └──────────────┘  └──────────┘  └───────┬────────┘  │
+│                                                          │           │
+│  Student Pages (8)          Admin Pages (3)               │           │
+│  ┌─────────┐ ┌──────────┐  ┌──────────┐ ┌──────────┐   │           │
+│  │Dashboard│ │Assessment│  │Dashboard │ │ManageCar.│   │           │
+│  │Career   │ │Colleges  │  │ManageUsr │ │          │   │           │
+│  │Chatbot  │ │Profile   │  └──────────┘ └──────────┘   │           │
+│  │Resources│ │Scholarsh.│                                │           │
+│  └─────────┘ └──────────┘                                │           │
+└──────────────────────────────────────────────────────────┼───────────┘
+                                                           │
+                                              HTTP (localhost:8000)
+                                                           │
+┌──────────────────────────────────────────────────────────┼───────────┐
+│                       BACKEND (FastAPI)                   │           │
+│                                                           ▼           │
+│  ┌─────────────────────────────────────────────────────────────────┐ │
+│  │                    FastAPI Application (main.py)                 │ │
+│  │  CORS · Startup Events · Ollama Auto-Launch · DB Seed           │ │
+│  └───────────┬─────────┬──────────┬──────────┬──────────┬─────────┘ │
+│              │         │          │          │          │            │
+│  ┌───────────┴──┐ ┌────┴────┐ ┌──┴───────┐ ┌┴────────┐ ┌┴────────┐ │
+│  │  auth.py     │ │assess.py│ │careers.py│ │college.py│ │chatbot.py│ │
+│  │ Login/Signup │ │20 Q Quiz│ │CRUD Admin│ │AI Search │ │Hybrid AI │ │
+│  │ Profile PUT  │ │Score+Rec│ │36 Careers│ │70K+ Data │ │FAQ+Ollama│ │
+│  └──────┬───────┘ └────┬────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ │
+│         │              │           │             │            │       │
+│  ┌──────┴──────────────┴───────────┴─────────────┴────────────┴────┐ │
+│  │              database.py (SQLAlchemy Data Access Layer)          │ │
+│  │  get_user · save_user · update_user · delete_user               │ │
+│  │  get_careers · save_career · delete_career                      │ │
+│  │  _calc_profile_completion · seed_db                             │ │
+│  └─────────────────────────┬───────────────────────────────────────┘ │
+│                            │                                         │
+│  ┌─────────────────────────┴─────────────────────────────────────┐   │
+│  │                     models.py (ORM)                            │   │
+│  │  User: email, password_hash, role, profile, academic_info,    │   │
+│  │        interests, assessment_status, profile_completion        │   │
+│  │  Career: title, field, description, salary, education,        │   │
+│  │          skills, growth_rate, demand_level, image              │   │
+│  └─────────────────────────┬─────────────────────────────────────┘   │
+│                            │                                         │
+│                    ┌───────┴───────┐                                  │
+│                    │  SQLite DB    │                                  │
+│                    │ educareer.db  │                                  │
+│                    └───────────────┘                                  │
 │                                                                      │
-│  Current (Mock Data):                                               │
-│  ┌────────────────────────────────────────────────────┐            │
-│  │  • Import from mock files                          │            │
-│  │  • Filter/Sort/Transform data                      │            │
-│  │  • Calculate results (assessment scores)           │            │
-│  │  • Validate inputs                                 │            │
-│  └────────────────────────────────────────────────────┘            │
-│                                                                      │
-│  Future (API Layer):                                                │
-│  ┌────────────────────────────────────────────────────┐            │
-│  │  • API Service call (fetch/axios)                  │            │
-│  │  • Request interceptors (add auth token)           │            │
-│  │  • Response handling                               │            │
-│  │  • Error handling                                  │            │
-│  └────────────────────────────────────────────────────┘            │
-│                              ↓                                       │
-│                    ┌─────────────────┐                              │
-│                    │  Backend API    │  (Future)                    │
-│                    │  POST /careers  │                              │
-│                    │  GET /colleges  │                              │
-│                    │  PUT /user/:id  │                              │
-│                    └─────────────────┘                              │
-│                              ↓                                       │
-│                    ┌─────────────────┐                              │
-│                    │   Database      │  (Future)                    │
-│                    │   PostgreSQL    │                              │
-│                    └─────────────────┘                              │
-│                              ↓                                       │
-│                    ┌─────────────────┐                              │
-│                    │  ML Models      │  (Future)                    │
-│                    │  Recommendations│                              │
-│                    └─────────────────┘                              │
-└─────────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────────┐
-│                      RESPONSE HANDLING                               │
-│  • Update component state with data                                 │
-│  • Trigger loading states (start/end)                               │
-│  • Handle errors (show error messages)                              │
-│  • Update cache (localStorage)                                      │
-└─────────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────────┐
-│                        UI RE-RENDER                                  │
-│  • React reconciliation                                             │
-│  • Virtual DOM diff                                                 │
-│  • Update actual DOM                                                │
-│  • Framer Motion animations                                         │
-└─────────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────────┐
-│                      UPDATED UI DISPLAY                              │
-│  • Show new data                                                    │
-│  • Display success/error messages                                   │
-│  • Enable/disable buttons                                           │
-└─────────────────────────────────────────────────────────────────────┘
+│  ┌──────────────────────────────────────────────────────────────┐    │
+│  │                    AI / ML Layer                              │    │
+│  │                                                              │    │
+│  │  sentence-transformers ──▶ FAISS Index ──▶ FAQ Matching      │    │
+│  │  (all-MiniLM-L6-v2)      (IndexFlatL2)    College Search    │    │
+│  │                                                              │    │
+│  │  Ollama (localhost:11434) ──▶ qwen2.5:0.5b ──▶ LLM Chat    │    │
+│  └──────────────────────────────────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
----
-
-## 📦 Component Hierarchy & Data Flow
+## Authentication Flow
 
 ```
-App.jsx (Root)
-  │
-  ├── AuthProvider (Context)
-  │     │
-  │     └── Provides: { user, login, signup, logout, updateProfile }
-  │
-  └── Router
-        │
-        ├── Public Routes
-        │     │
-        │     ├── Login
-        │     │    ├── Data In: email, password
-        │     │    ├── Process: AuthContext.login()
-        │     │    ├── Validate: mockUsers
-        │     │    └── Data Out: user object → AuthContext
-        │     │
-        │     └── Signup
-        │          ├── Data In: name, email, password, role
-        │          ├── Process: AuthContext.signup()
-        │          ├── Validate: email uniqueness
-        │          └── Data Out: new user → mockUsers, AuthContext
-        │
-        └── Protected Routes (ProtectedRoute wrapper)
+User visits site
+      │
+      ▼
+AuthContext checks localStorage
+for authToken + user
+      │
+      ├── Token found ──▶ GET /api/auth/me ──▶ Valid? ──▶ Set user state
+      │                                          │
+      │                                     Invalid ──▶ Clear storage ──▶ Show Login
+      │
+      └── No token ──▶ Show Login/Signup page
+                              │
+                 ┌────────────┴────────────┐
+                 │                          │
+            POST /login               POST /signup
+            (email, password)         (email, password,
+                 │                     firstName, lastName)
+                 ▼                          │
+         Validate bcrypt hash               ▼
+                 │                    Hash password (bcrypt)
+                 │                    Create user in SQLite
+                 ▼                          │
+           Generate token                   ▼
+           (secrets.token_urlsafe)    Generate token
+                 │                          │
+                 └──────────┬───────────────┘
+                            │
+                            ▼
+                Store token in memory (tokens_db dict)
+                Return {token, user} to frontend
+                            │
+                            ▼
+                Frontend: Save to localStorage
+                Set user in AuthContext
+                            │
+                            ▼
+                Redirect by role:
+                ├── student ──▶ /student/dashboard
+                └── admin   ──▶ /admin/dashboard
+```
+
+### Token Lifecycle
+- **Storage**: In-memory Python dict (`tokens_db`) keyed by token string
+- **Frontend**: `localStorage.authToken` + Axios interceptor auto-attaches `Authorization: Bearer {token}`
+- **Validation**: Each protected request extracts token from header, looks up in `tokens_db`
+- **Expiry**: Tokens persist until server restart (in-memory)
+
+## Career Assessment Flow
+
+```
+Student navigates to /student/assessment
+                │
+                ▼
+      GET /api/assessment/questions
+                │
+                ▼
+      Returns 20 questions from CSV
+      (student_career_assessment_questions.csv)
+      Each question has: id, text, category
+                │
+                ▼
+      Student answers all 20 questions
+      (Likert scale: 1-5 per question)
+                │
+                ▼
+      POST /api/assessment/submit
+      Body: { responses: [4, 3, 5, 2, ...] }  (20 integers)
+                │
+                ▼
+      ┌─────────────────────────────────┐
+      │    Assessment Scoring Engine     │
+      │                                  │
+      │  1. Validate 20 responses (1-5)  │
+      │  2. Map each response to its     │
+      │     question's category          │
+      │  3. Sum scores per category      │
+      │  4. Rank categories by total     │
+      │  5. Select top 3 categories      │
+      │  6. Find matching careers from   │
+      │     36-career database           │
+      └─────────┬───────────────────────┘
+                │
+                ▼
+      If authenticated:
+        update_user(email, {assessmentStatus: {
+          completed: true,
+          results: {scores, topCategories},
+          completedAt: timestamp
+        }})
+        → _calc_profile_completion() auto runs (+20 points)
+                │
+                ▼
+      Return: {
+        scores: { "Technology": 45, "Engineering": 38, ... },
+        topCategories: ["Technology", "Engineering", "Design"],
+        recommendedCareers: [career objects]
+      }
+```
+
+### 12 Career Categories
+Technology & Software, Engineering, Finance & Banking, Healthcare & Medicine, Design & Creative, Education, Law & Policy, Media & Communication, Science & Research, Business & Management, Agriculture & Environment, Hospitality & Tourism
+
+## College Search Flow
+
+```
+Student opens /student/colleges
+           │
+           ▼
+  GET /api/colleges/filters
+           │
+           ▼
+  Returns: { fields: [...11 disciplines], states: [...262 states] }
+  (Parsed from kk_14.csv on startup)
+           │
+           ▼
+  Student selects filters and/or types a query
+           │
+           ├── Filters change ──▶ Auto-triggers search
+           │
+           ▼
+  POST /api/colleges/search
+  Body: { query?, field?, state?, limit: 50, page: 1 }
+           │
+           ▼
+  ┌────────┴───────────────────────────────────┐
+  │                                             │
+  │  Has query string?                          │
+  │  ├── YES: Semantic Search                   │
+  │  │   1. Encode query via all-MiniLM-L6-v2   │
+  │  │   2. FAISS search (5× limit candidates)  │
+  │  │   3. Apply field/state filters on results │
+  │  │   4. Paginate                             │
+  │  │                                           │
+  │  └── NO: Filter Search                      │
+  │      1. Filter DataFrame by field + state    │
+  │      2. Count total matches                  │
+  │      3. Slice for requested page             │
+  └────────┬───────────────────────────────────┘
+           │
+           ▼
+  Return: {
+    colleges: [{name, address, state, website, field, placement, accreditation}],
+    total: 3045,
+    page: 1,
+    per_page: 50
+  }
+           │
+           ▼
+  Frontend renders college cards + pagination
+  "Showing 1-50 of 3,045 colleges"
+  [← Previous] [Page 1 of 61] [Next →]
+```
+
+### College Data Pipeline
+```
+kk_14.csv (70,000+ rows)
+     │
+     ├──▶ generate_embeddings.py ──▶ college_embeddings.npy (384-dim vectors)
+     │                                        │
+     │                                        ▼
+     └──▶ colleges.py startup ──▶ FAISS IndexFlatL2 (loaded from .npy)
+                │                             │
+                └──▶ pandas DataFrame ────────┘
+                     (in-memory for filter queries)
+```
+
+## Hybrid Chatbot Flow
+
+```
+Student sends message in /student/chatbot
               │
-              ├── Student Routes
-              │     │
-              │     ├── MainLayout
-              │     │    ├── Sidebar (navigation)
-              │     │    ├── Header (search, notifications)
-              │     │    └── Outlet (page content)
-              │     │
-              │     ├── Dashboard
-              │     │    ├── Data In: user from AuthContext
-              │     │    ├── Data In: mockCareers, mockColleges
-              │     │    ├── Process: Filter by user preferences
-              │     │    └── Display: recommendations, timeline
-              │     │
-              │     ├── Assessment
-              │     │    ├── Data In: mockAssessments (8 questions)
-              │     │    ├── State: answers[], currentQuestion
-              │     │    ├── Process: Calculate field scores
-              │     │    ├── Data In: mockCareers (for matching)
-              │     │    └── Display: results, recommendations
-              │     │
-              │     ├── CareerExplorer
-              │     │    ├── Data In: mockCareers
-              │     │    ├── State: searchTerm, selectedField
-              │     │    ├── Process: Filter/search careers
-              │     │    └── Display: career cards, modal
-              │     │
-              │     ├── CollegeDirectory
-              │     │    ├── Data In: mockColleges
-              │     │    ├── State: searchTerm, filters
-              │     │    ├── Process: Filter/sort colleges
-              │     │    └── Display: college cards
-              │     │
-              │     ├── Timeline
-              │     │    ├── Data In: mockScholarshipsAndResources
-              │     │    ├── Process: Calculate days until deadline
-              │     │    └── Display: timeline events
-              │     │
-              │     ├── Chatbot
-              │     │    ├── Data In: user.chatHistory (mockUsers)
-              │     │    ├── State: messages[], input
-              │     │    ├── Process: Mock bot responses
-              │     │    └── Display: chat interface
-              │     │
-              │     ├── Profile
-              │     │    ├── Data In: user from AuthContext
-              │     │    ├── State: editMode, formData
-              │     │    ├── Process: AuthContext.updateProfile()
-              │     │    └── Display: editable profile form
-              │     │
-              │     ├── StudyResources
-              │     │    ├── Data In: mockScholarshipsAndResources
-              │     │    ├── State: selectedCategory
-              │     │    ├── Process: Filter by category
-              │     │    └── Display: resource cards
-              │     │
-              │     └── Scholarships
-              │          ├── Data In: mockScholarshipsAndResources
-              │          ├── State: filters (amount, deadline)
-              │          ├── Process: Filter/sort scholarships
-              │          └── Display: scholarship cards
+              ▼
+    POST /api/chatbot/ask
+    Body: {
+      message: "What careers match my interests?",
+      user_context: {
+        firstName, interests, topCategories,
+        hasAssessment, school, scores
+      }
+    }
               │
-              ├── Counselor Routes
-              │     │
-              │     └── Dashboard
-              │          ├── Data In: mockUsers (students)
-              │          ├── Process: Filter assigned students
-              │          └── Display: student list, sessions
+              ▼
+┌─────────────────────────────────────────────────────┐
+│               TIER 1: FAQ Search (FAISS)             │
+│                                                      │
+│  1. Encode user message via all-MiniLM-L6-v2         │
+│  2. Search FAISS index built from faq.xlsx           │
+│  3. If L2 distance < 0.5 (similarity threshold):     │
+│     → Return { answer, source: "faq",                │
+│                confidence, matchedQuestion }           │
+│  4. Else: fall through to Tier 2                     │
+└───────────────────────┬─────────────────────────────┘
+                        │ (no FAQ match)
+                        ▼
+┌─────────────────────────────────────────────────────┐
+│               TIER 2: Ollama LLM                     │
+│                                                      │
+│  1. Build system prompt:                             │
+│     - Career database summary (12 fields, 36 careers)│
+│     - Platform features description                  │
+│     - User profile (name, school, interests, scores) │
+│  2. POST http://localhost:11434/api/chat             │
+│     Model: qwen2.5:0.5b                              │
+│     Options: temperature=0.7, num_predict=256        │
+│     Timeout: 60s                                     │
+│  3. Strip <think>...</think> blocks (deepseek compat)│
+│  4. Return { answer, source: "ollama" }              │
+│  5. If error/timeout: fall through to Tier 3         │
+└───────────────────────┬─────────────────────────────┘
+                        │ (Ollama unavailable)
+                        ▼
+┌─────────────────────────────────────────────────────┐
+│               TIER 3: Rule-Based Fallback            │
+│                                                      │
+│  Pattern match keywords in user message:             │
+│  - "career" / "job" → career guidance response       │
+│  - "college" / "university" → college search tips    │
+│  - "assessment" / "quiz" → assessment instructions   │
+│  - "scholarship" → scholarship guidance              │
+│  - Default → general helpful response                │
+│                                                      │
+│  Return { answer, source: "rule-based" }             │
+└─────────────────────────────────────────────────────┘
               │
-              └── Admin Routes
-                    │
-                    ├── Dashboard
-                    │    ├── Data In: all mock data
-                    │    ├── Process: Calculate statistics
-                    │    └── Display: analytics, recent activity
-                    │
-                    └── ManageCareers (CRUD Template)
-                         ├── Data In: mockCareers
-                         ├── State: careers[], editingCareer
-                         ├── Actions:
-                         │    ├── CREATE: Add new career
-                         │    ├── READ: Display all careers
-                         │    ├── UPDATE: Edit career details
-                         │    └── DELETE: Remove career
-                         └── Display: table, modals
+              ▼
+    Frontend displays response with source badge:
+    [FAQ] / [AI] / [Rule-based]
 ```
 
----
-
-## 🔐 Authentication & Authorization Flow
+## Profile Completion Calculation
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    AUTHENTICATION PIPELINE                       │
-└─────────────────────────────────────────────────────────────────┘
+_calc_profile_completion(user) → Integer (0-100)
 
-User Input (email + password)
-         ↓
-┌─────────────────────┐
-│  Login Component    │
-│  • Validate format  │
-│  • Call login()     │
-└─────────────────────┘
-         ↓
-┌──────────────────────────────────────────┐
-│        AuthContext.login()               │
-│  1. Find user in mockUsers               │
-│  2. Compare credentials                  │
-│  3. If match:                            │
-│     • Set user state                     │
-│     • Set isAuthenticated = true         │
-│     • Save to localStorage               │
-│  4. If no match:                         │
-│     • Throw error                        │
-└──────────────────────────────────────────┘
-         ↓
-┌──────────────────────────────────────────┐
-│      localStorage Persistence            │
-│  localStorage.setItem('user', JSON)      │
-└──────────────────────────────────────────┘
-         ↓
-┌──────────────────────────────────────────┐
-│      Navigate to Dashboard               │
-│  • Router checks user.role               │
-│  • Redirects to role-specific path       │
-└──────────────────────────────────────────┘
-         ↓
-┌──────────────────────────────────────────┐
-│      ProtectedRoute Wrapper              │
-│  1. Check isAuthenticated                │
-│  2. Check user.role in allowedRoles      │
-│  3. If authorized: render page           │
-│  4. If not: redirect to /login           │
-└──────────────────────────────────────────┘
-         ↓
-     Render Page
+  Base score:                              10 points
+  ├── profile.firstName filled:           + 5
+  ├── profile.lastName filled:            + 5
+  ├── profile.phone filled:               +10
+  ├── profile.address filled:             +10
+  ├── academic_info.school filled:        +10
+  ├── academic_info.grade filled:         +10
+  ├── academic_info.gpa filled:           +10
+  ├── interests (non-empty list):         +10
+  └── assessment completed:               +20
+                                    ═══════════
+                                    Max: 100 pts
 
-┌─────────────────────────────────────────────────────────────────┐
-│              ROLE-BASED ACCESS CONTROL (RBAC)                    │
-└─────────────────────────────────────────────────────────────────┘
-
-Route: /student/*
-  ├── Allowed Roles: ['student']
-  ├── Check: user.role === 'student'
-  └── Redirect if unauthorized: /login
-
-Route: /counselor/*
-  ├── Allowed Roles: ['counselor']
-  ├── Check: user.role === 'counselor'
-  └── Redirect if unauthorized: /login
-
-Route: /admin/*
-  ├── Allowed Roles: ['admin']
-  ├── Check: user.role === 'admin'
-  └── Redirect if unauthorized: /login
-
-Route: /login, /signup
-  ├── Allowed: Public (all users)
-  └── If authenticated: redirect to dashboard
+Triggered automatically by update_user() on every profile save.
 ```
 
----
-
-## 🎯 Assessment Scoring Algorithm
+## Admin Data Flow
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│              CAREER ASSESSMENT SCORING PIPELINE                  │
-└─────────────────────────────────────────────────────────────────┘
+Admin navigates to /admin/dashboard
+           │
+           ▼
+    GET /api/admin/stats
+           │
+           ▼
+    Returns: {
+      totalUsers,
+      totalStudents,       (filtered: role == "student")
+      totalCareers,        (count from careers table)
+      assessmentsCompleted,(count where assessment_status.completed==true)
+      careerFields         (distinct field count)
+    }
 
-START: User begins assessment
-  ↓
-Initialize: scores = {
-  tech: 0,
-  healthcare: 0,
-  business: 0,
-  creative: 0,
-  education: 0,
-  engineering: 0,
-  science: 0,
-  social: 0,
-  legal: 0,
-  trades: 0,
-  hospitality: 0,
-  agriculture: 0
-}
-  ↓
-FOR each question (1-8):
-  ├── Display question with 4 options
-  ├── User selects option
-  ├── Get option.scores object:
-  │      {
-  │        tech: 10,
-  │        healthcare: 5,
-  │        creative: 3,
-  │        ...
-  │      }
-  ├── FOR each field in option.scores:
-  │      scores[field] += option.scores[field]
-  └── Move to next question
-  ↓
-All questions answered
-  ↓
-Convert scores to array:
-  [
-    { field: 'tech', score: 65 },
-    { field: 'healthcare', score: 48 },
-    { field: 'business', score: 42 },
-    ...
-  ]
-  ↓
-Sort by score (descending)
-  ↓
-Get top 3 fields:
-  1. Technology (65 points)
-  2. Healthcare (48 points)
-  3. Business (42 points)
-  ↓
-FOR each top field:
-  ├── Filter mockCareers where career.field === topField
-  ├── Collect matching careers
-  └── Add to recommendations
-  ↓
-Display Results:
-  ├── Top 3 recommended fields (with scores)
-  ├── 3-6 matching careers (from mockCareers)
-  ├── Suggested colleges (based on career programs)
-  └── Next steps & resources
-  ↓
-END
+Admin → /admin/careers
+           │
+           ▼
+    GET /api/careers/ ──────────────▶ List all careers
+    POST /api/careers/ ─────────────▶ Create career (admin token required)
+    PUT /api/careers/{id} ──────────▶ Update career
+    DELETE /api/careers/{id} ────────▶ Delete career
+
+Admin → /admin/users
+           │
+           ▼
+    GET /api/admin/users ───────────▶ List all users (no passwords)
+    DELETE /api/admin/users/{email} ─▶ Delete user
+                                       (admin@example.com protected)
 ```
 
----
-
-## 🔮 Future Architecture (With Backend & ML)
+## Frontend Routing Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                      FRONTEND (React)                            │
-│  • Components • Pages • State Management                        │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓↑ HTTP/HTTPS
-┌─────────────────────────────────────────────────────────────────┐
-│                    API GATEWAY / NGINX                           │
-│  • Load Balancing • SSL/TLS • Rate Limiting                     │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓↑
-┌─────────────────────────────────────────────────────────────────┐
-│                  BACKEND (Python Flask/FastAPI)                  │
-│                                                                  │
-│  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐   │
-│  │  Auth Service  │  │  Career Service│  │  User Service  │   │
-│  │  • JWT tokens  │  │  • CRUD ops    │  │  • Profiles    │   │
-│  │  • Sessions    │  │  • Search      │  │  • Preferences │   │
-│  └────────────────┘  └────────────────┘  └────────────────┘   │
-│                                                                  │
-│  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐   │
-│  │ College Service│  │  ML Service    │  │ Chatbot Service│   │
-│  │  • Directory   │  │  • Recommend   │  │  • NLP/LLM     │   │
-│  │  • Matching    │  │  • Predict     │  │  • Responses   │   │
-│  └────────────────┘  └────────────────┘  └────────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓↑
-┌─────────────────────────────────────────────────────────────────┐
-│                      DATABASE (PostgreSQL)                       │
-│                                                                  │
-│  Tables:                                                         │
-│  • users (id, name, email, password_hash, role)                 │
-│  • careers (id, title, field, description, salary, ...)         │
-│  • colleges (id, name, location, ranking, ...)                  │
-│  • assessments (id, user_id, answers, results, timestamp)       │
-│  • scholarships (id, name, amount, deadline, ...)               │
-│  • resources (id, title, category, url, ...)                    │
-│  • user_preferences (id, user_id, career_interests, ...)        │
-│  • chat_history (id, user_id, messages, timestamp)              │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓↑
-┌─────────────────────────────────────────────────────────────────┐
-│              MACHINE LEARNING LAYER (Python)                     │
-│                                                                  │
-│  ┌────────────────────────────────────────────────────┐        │
-│  │  Career Recommendation Model                       │        │
-│  │  • Input: Assessment scores, academic data         │        │
-│  │  • Algorithm: Collaborative filtering / Neural Net │        │
-│  │  • Output: Personalized career matches             │        │
-│  └────────────────────────────────────────────────────┘        │
-│                                                                  │
-│  ┌────────────────────────────────────────────────────┐        │
-│  │  College Match Model                               │        │
-│  │  • Input: GPA, SAT, interests, location prefs      │        │
-│  │  • Algorithm: Ranking algorithm                    │        │
-│  │  • Output: College recommendations with fit scores │        │
-│  └────────────────────────────────────────────────────┘        │
-│                                                                  │
-│  ┌────────────────────────────────────────────────────┐        │
-│  │  Success Prediction Model                          │        │
-│  │  • Input: Student profile, career choice           │        │
-│  │  • Algorithm: Logistic regression / Random Forest  │        │
-│  │  • Output: Success probability & risk factors      │        │
-│  └────────────────────────────────────────────────────┘        │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓↑
-┌─────────────────────────────────────────────────────────────────┐
-│                    EXTERNAL INTEGRATIONS                         │
-│                                                                  │
-│  • College Board API (SAT scores, college data)                 │
-│  • CommonApp API (application tracking)                         │
-│  • Scholarship databases (Fastweb, Scholarships.com)            │
-│  • OpenAI API (chatbot intelligence)                            │
-│  • Email service (SendGrid/AWS SES)                             │
-│  • Payment gateway (Stripe for premium features)                │
-└─────────────────────────────────────────────────────────────────┘
+<BrowserRouter>
+  <AuthProvider>
+    <Routes>
+      │
+      ├── /login ──────────────────▶ Login.jsx
+      ├── /signup ─────────────────▶ Signup.jsx
+      │
+      ├── /student/* ──▶ <ProtectedRoute role="student">
+      │   └── <MainLayout>
+      │       ├── dashboard ───────▶ Dashboard.jsx
+      │       ├── assessment ──────▶ Assessment.jsx
+      │       ├── careers ─────────▶ CareerExplorer.jsx
+      │       ├── colleges ────────▶ CollegeDirectory.jsx
+      │       ├── chatbot ─────────▶ Chatbot.jsx
+      │       ├── profile ─────────▶ Profile.jsx
+      │       ├── resources ───────▶ StudyResources.jsx
+      │       └── scholarships ────▶ Scholarships.jsx
+      │
+      ├── /admin/* ────▶ <ProtectedRoute role="admin">
+      │   └── <MainLayout>
+      │       ├── dashboard ───────▶ AdminDashboard.jsx
+      │       ├── careers ─────────▶ ManageCareers.jsx
+      │       └── users ───────────▶ ManageUsers.jsx
+      │
+      ├── / ───────────────────────▶ Redirect to /login
+      └── * ───────────────────────▶ Redirect to /login
+    </Routes>
+  </AuthProvider>
+</BrowserRouter>
 ```
 
----
-
-## 📈 Data Entity Relationships (Future Database Schema)
+## API Service Layer (api.js)
 
 ```
-┌──────────────┐
-│    users     │
-├──────────────┤
-│ id (PK)      │───┐
-│ name         │   │
-│ email        │   │
-│ password_hash│   │
-│ role         │   │
-│ created_at   │   │
-└──────────────┘   │
-                   │
-                   ├──→ ┌──────────────────┐
-                   │    │ user_preferences │
-                   │    ├──────────────────┤
-                   │    │ id (PK)          │
-                   │    │ user_id (FK)     │
-                   │    │ career_interests │
-                   │    │ location_prefs   │
-                   │    │ salary_range     │
-                   │    └──────────────────┘
-                   │
-                   ├──→ ┌──────────────────┐
-                   │    │ assessments      │
-                   │    ├──────────────────┤
-                   │    │ id (PK)          │
-                   │    │ user_id (FK)     │
-                   │    │ answers (JSON)   │
-                   │    │ results (JSON)   │
-                   │    │ timestamp        │
-                   │    └──────────────────┘
-                   │
-                   ├──→ ┌──────────────────┐
-                   │    │ chat_history     │
-                   │    ├──────────────────┤
-                   │    │ id (PK)          │
-                   │    │ user_id (FK)     │
-                   │    │ messages (JSON)  │
-                   │    │ timestamp        │
-                   │    └──────────────────┘
-                   │
-                   └──→ ┌──────────────────┐
-                        │ user_colleges    │
-                        ├──────────────────┤
-                        │ id (PK)          │
-                        │ user_id (FK)     │
-                        │ college_id (FK)  │
-                        │ status           │
-                        └──────────────────┘
-                                 │
-                                 ↓
-                        ┌──────────────────┐
-                        │    colleges      │
-                        ├──────────────────┤
-                        │ id (PK)          │
-                        │ name             │
-                        │ location         │
-                        │ ranking          │
-                        │ tuition          │
-                        │ acceptance_rate  │
-                        └──────────────────┘
-
-┌──────────────┐
-│   careers    │
-├──────────────┤
-│ id (PK)      │
-│ title        │
-│ field        │
-│ description  │
-│ salary_min   │
-│ salary_max   │
-│ education    │
-│ growth_rate  │
-└──────────────┘
-
-┌──────────────┐
-│ scholarships │
-├──────────────┤
-│ id (PK)      │
-│ name         │
-│ provider     │
-│ amount       │
-│ deadline     │
-│ eligibility  │
-└──────────────┘
-
-┌──────────────┐
-│  resources   │
-├──────────────┤
-│ id (PK)      │
-│ title        │
-│ category     │
-│ description  │
-│ url          │
-│ type         │
-└──────────────┘
+axios.create({ baseURL: VITE_API_URL || "http://localhost:8000" })
+│
+├── Request Interceptor: Attach "Authorization: Bearer {token}" from localStorage
+│
+├── authAPI
+│   ├── login(email, password)    → POST /api/auth/login
+│   ├── signup(data)              → POST /api/auth/signup
+│   ├── me()                      → GET  /api/auth/me
+│   └── updateProfile(data)       → PUT  /api/auth/profile
+│
+├── assessmentAPI
+│   ├── getQuestions()            → GET  /api/assessment/questions
+│   └── submit(responses)         → POST /api/assessment/submit
+│
+├── collegesAPI
+│   ├── getFilters()             → GET  /api/colleges/filters
+│   ├── search(params)           → POST /api/colleges/search
+│   └── getStats()               → GET  /api/colleges/stats
+│
+├── chatbotAPI
+│   └── ask(message, userCtx)    → POST /api/chatbot/ask
+│
+├── careersAPI
+│   ├── list(field?)             → GET    /api/careers/
+│   ├── fields()                 → GET    /api/careers/fields
+│   ├── get(id)                  → GET    /api/careers/{id}
+│   ├── create(data)             → POST   /api/careers/
+│   ├── update(id, data)         → PUT    /api/careers/{id}
+│   └── delete(id)               → DELETE /api/careers/{id}
+│
+└── adminAPI
+    ├── stats()                  → GET    /api/admin/stats
+    ├── users()                  → GET    /api/admin/users
+    └── deleteUser(email)        → DELETE /api/admin/users/{email}
 ```
 
----
-
-## 🚀 Deployment Pipeline (Future)
+## Database Schema (SQLAlchemy)
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     DEVELOPMENT WORKFLOW                         │
-└─────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│                 users                         │
+├──────────────────────────────────────────────┤
+│ id               VARCHAR (PK)                │  "student-{hex}" or "admin-{hex}"
+│ email            VARCHAR (UNIQUE, INDEX)      │
+│ password_hash    VARCHAR                      │  bcrypt hashed
+│ role             VARCHAR                      │  "student" | "admin"
+│ profile          JSON                         │  {firstName, lastName, phone, avatar, address}
+│ academic_info    JSON                         │  {grade, school, gpa, satScore, actScore}
+│ interests        JSON                         │  ["coding", "math", ...]
+│ assessment_status JSON                        │  {completed, results, completedAt}
+│ profile_completion INTEGER                    │  0-100 (auto-calculated)
+└──────────────────────────────────────────────┘
 
-Developer writes code
-         ↓
-Git commit & push to GitHub
-         ↓
-┌──────────────────────────────────────────┐
-│      CI/CD Pipeline (GitHub Actions)     │
-│  1. Run tests (Jest, Pytest)             │
-│  2. Run linters (ESLint, Pylint)         │
-│  3. Build frontend (npm run build)       │
-│  4. Build backend (Docker image)         │
-│  5. Security scan (Snyk, OWASP)          │
-└──────────────────────────────────────────┘
-         ↓
-   Tests pass?
-         ├─── NO ──→ Notify developer, reject
-         │
-        YES
-         ↓
-┌──────────────────────────────────────────┐
-│         Deploy to Staging                │
-│  • Frontend → Vercel/Netlify             │
-│  • Backend → Docker container            │
-│  • Database → PostgreSQL (staging)       │
-└──────────────────────────────────────────┘
-         ↓
-Manual testing & QA
-         ↓
-   Approved?
-         ├─── NO ──→ Fix & redeploy
-         │
-        YES
-         ↓
-┌──────────────────────────────────────────┐
-│       Deploy to Production               │
-│  • Frontend → CDN (Cloudflare/AWS)       │
-│  • Backend → Kubernetes/AWS ECS          │
-│  • Database → PostgreSQL (production)    │
-│  • ML Models → AWS SageMaker             │
-└──────────────────────────────────────────┘
-         ↓
-Monitor with:
-  • Error tracking (Sentry)
-  • Analytics (Google Analytics)
-  • Performance (Lighthouse)
-  • Logs (CloudWatch/ELK)
+┌──────────────────────────────────────────────┐
+│                 careers                       │
+├──────────────────────────────────────────────┤
+│ id               INTEGER (PK, AUTO)          │
+│ title            VARCHAR                      │
+│ field            VARCHAR (INDEX)              │
+│ description      TEXT                         │
+│ average_salary   VARCHAR                      │
+│ education        VARCHAR                      │
+│ skills           JSON                         │  ["Python", "ML", ...]
+│ growth_rate      VARCHAR                      │
+│ demand_level     VARCHAR                      │  "High" | "Medium" | "Low"
+│ image            VARCHAR                      │  Unsplash URL
+└──────────────────────────────────────────────┘
 ```
 
----
-
-## 🎨 UI Component State Flow
+## Server Startup Sequence
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│              TYPICAL PAGE LIFECYCLE                              │
-└─────────────────────────────────────────────────────────────────┘
-
-Component Mounts
-       ↓
-┌──────────────────────┐
-│   useEffect() hook   │
-│   • Load data        │
-│   • Set loading=true │
-└──────────────────────┘
-       ↓
-┌──────────────────────┐
-│   Fetch Data         │
-│   (mock or API)      │
-└──────────────────────┘
-       ↓
-┌──────────────────────┐
-│   Process Data       │
-│   • Transform        │
-│   • Filter           │
-│   • Sort             │
-└──────────────────────┘
-       ↓
-┌──────────────────────┐
-│   Update State       │
-│   • setData(result)  │
-│   • setLoading(false)│
-└──────────────────────┘
-       ↓
-┌──────────────────────┐
-│   React Re-render    │
-│   • Virtual DOM diff │
-│   • Update UI        │
-└──────────────────────┘
-       ↓
-┌──────────────────────┐
-│   User Interaction   │
-│   • Search           │
-│   • Filter           │
-│   • Click            │
-└──────────────────────┘
-       ↓
-┌──────────────────────┐
-│   Event Handler      │
-│   • Update state     │
-│   • Trigger re-render│
-└──────────────────────┘
-       ↓
-     Repeat
-
-Component Unmounts
-       ↓
-Cleanup (useEffect cleanup)
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+                │
+                ▼
+        FastAPI app created
+        CORS middleware configured
+        6 routers registered (/api/auth, /api/assessment, etc.)
+                │
+                ▼
+        @app.on_event("startup")
+                │
+                ├──▶ seed_db()
+                │    ├── Create tables if not exist
+                │    ├── Seed admin@example.com (admin123, bcrypt)
+                │    ├── Seed student@example.com (student123, bcrypt)
+                │    └── Seed 36 careers across 12 fields
+                │
+                └──▶ _ensure_ollama()
+                     ├── Check http://localhost:11434
+                     │   ├── Running ──▶ Check for qwen2.5:0.5b model
+                     │   │               ├── Present ──▶ Ready
+                     │   │               └── Missing ──▶ Pull model (~397MB)
+                     │   │
+                     │   └── Not running ──▶ Start Ollama subprocess
+                     │                       └── Wait 15s ──▶ Retry
+                     │
+                     └── All failures ──▶ Log warning, chatbot uses FAQ + rules only
+                │
+                ▼
+        Routers load data:
+        ├── colleges.py: Load kk_14.csv (70K+ rows) + college_embeddings.npy → FAISS index
+        ├── chatbot.py:  Load faq.xlsx → FAISS index + Load all careers for context
+        └── assessment.py: Load assessment CSV (20 questions)
+                │
+                ▼
+        Server ready at http://localhost:8000
+        Health: GET / or GET /health
 ```
 
----
+## Technology Stack Summary
 
-This architecture document provides a complete view of the system's data flow, component interactions, and future scalability plans.
+| Layer | Technology | Version | Purpose |
+|-------|-----------|---------|---------|
+| Frontend | React | 19.1.1 | UI framework |
+| Frontend | Vite (rolldown) | 7.1.14 | Build tool |
+| Frontend | Tailwind CSS | 3.4.18 | Styling |
+| Frontend | React Router | 7.9.6 | Routing |
+| Frontend | Framer Motion | 12.23.24 | Animations |
+| Frontend | Axios | 1.13.2 | HTTP client |
+| Frontend | Lucide React | 0.554.0 | Icons |
+| Backend | FastAPI | - | Web framework |
+| Backend | SQLAlchemy | - | ORM |
+| Backend | SQLite | - | Database |
+| Backend | bcrypt | - | Password hashing |
+| AI/ML | Ollama | 0.9.3 | Local LLM runtime |
+| AI/ML | qwen2.5:0.5b | 0.5B params | Chat model |
+| AI/ML | sentence-transformers | - | Text embeddings |
+| AI/ML | all-MiniLM-L6-v2 | 384-dim | Embedding model |
+| AI/ML | FAISS | - | Vector similarity |
+
+## File-to-Feature Mapping
+
+| Feature | Backend File | Frontend File |
+|---------|-------------|--------------|
+| Login/Signup | routers/auth.py | pages/auth/Login.jsx, Signup.jsx |
+| Assessment | routers/assessment.py | pages/student/Assessment.jsx |
+| Career Browse | routers/careers.py | pages/student/CareerExplorer.jsx |
+| College Search | routers/colleges.py | pages/student/CollegeDirectory.jsx |
+| AI Chat | routers/chatbot.py | pages/student/Chatbot.jsx |
+| Profile | routers/auth.py (PUT) | pages/student/Profile.jsx |
+| Dashboard | routers/admin.py (stats) | pages/student/Dashboard.jsx |
+| Admin Careers | routers/careers.py (CRUD) | pages/admin/ManageCareers.jsx |
+| Admin Users | routers/admin.py | pages/admin/ManageUsers.jsx |
+| Auth State | — | contexts/AuthContext.jsx |
+| API Client | — | services/api.js |
+| Route Guard | — | components/common/ProtectedRoute.jsx |
+| Layout | — | layouts/MainLayout.jsx |
+| DB Models | models.py | — |
+| DB Operations | database.py | — |

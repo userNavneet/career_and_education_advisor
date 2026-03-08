@@ -1,157 +1,156 @@
-# EduCareer - Career & Education Advisor Frontend
+# EduCareer Frontend
 
-A modern, glassmorphism-styled web application for career and education guidance built with React, Tailwind CSS, and Framer Motion.
-
-## Features
-
-### For Students
-- 📊 **Dashboard** - View recommended careers, nearby colleges, achievements, and important deadlines
-- 📝 **Career Assessment** - Take an interactive quiz to discover suitable career paths
-- 🔍 **Career Explorer** - Browse and filter through various career options
-- 🏫 **College Directory** - Search and explore colleges with detailed information
-- 📅 **Timeline** - Track important admission and scholarship deadlines
-- 🤖 **AI Chatbot** - Get personalized career guidance through AI
-- 👤 **Profile** - Manage personal, academic, and career preference information
-- 📚 **Study Resources** - Access free learning materials and test prep resources
-- 🎓 **Scholarships** - Find and apply for scholarship opportunities
-
-### For Counselors
-- 📊 **Dashboard** - Monitor student progress and upcoming sessions
-- 👥 **Student Management** - View and manage assigned students
-- 📅 **Session Scheduling** - Organize counseling sessions
-
-### For Administrators
-- 📊 **Admin Dashboard** - View platform statistics and activity
-- ✏️ **Content Management** - Add, edit, and delete careers, colleges, resources, and scholarships
-- 👥 **User Management** - Manage platform users
+React 19 single-page application with glassmorphism UI for the EduCareer career and education advisor platform.
 
 ## Tech Stack
 
-- **Framework**: React 18 with Vite
-- **Routing**: React Router v6
-- **Styling**: Tailwind CSS with custom glassmorphism theme
-- **Animations**: Framer Motion
-- **Icons**: Lucide React
-- **Forms**: React Hook Form + Zod
-- **State Management**: React Context API
-- **Date Handling**: date-fns
+- **React 19** - UI framework with hooks and functional components
+- **Vite** (rolldown-vite v7.1.14) - Fast build tool
+- **React Router v7** - Client-side routing with role-based protection
+- **Tailwind CSS v3** - Utility-first styling with custom glassmorphism theme
+- **Framer Motion** - Page transitions and hover animations
+- **Axios** - HTTP client with Bearer token interceptors
+- **Lucide React** - Icon library
+- **React Hook Form + Zod** - Form management and validation
+- **Recharts** - Data visualization
 
-## Getting Started
+## Features
 
-### Prerequisites
-- Node.js 16+ and npm
+### Student Pages (8 pages)
+- **Dashboard** - Recommended careers, nearby colleges, achievements
+- **Career Assessment** - 20-question interactive quiz with category scoring
+- **Career Explorer** - Browse/filter 36 careers across 12 fields
+- **College Directory** - AI-powered search of 70,000+ colleges with pagination
+- **AI Chatbot** - Chat interface with FAQ/Ollama/rule-based source badges
+- **Profile** - Personal + academic info, auto-updating completion percentage
+- **Learning Resources** - Curated study materials and test prep
+- **Scholarships** - Funding opportunities with eligibility details
 
-### Installation
-
-1. Navigate to the frontend directory:
-```bash
-cd frontend
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Start the development server:
-```bash
-npm run dev
-```
-
-4. Open your browser and visit `http://localhost:5173`
-
-## Demo Credentials
-
-### Student Account
-- Email: `student@example.com`
-- Password: `student123`
-
-### Counselor Account
-- Email: `counselor@example.com`
-- Password: `counselor123`
-
-### Admin Account
-- Email: `admin@example.com`
-- Password: `admin123`
+### Admin Pages (3 pages)
+- **Dashboard** - Stats: total users, students, careers, assessments completed
+- **Manage Careers** - Full CRUD for career entries
+- **Manage Users** - Search, view, and delete user accounts
 
 ## Project Structure
 
 ```
 frontend/
 ├── src/
-│   ├── components/          # Reusable UI components
-│   │   ├── common/          # Shared components (ProtectedRoute, etc.)
-│   │   ├── student/         # Student-specific components
-│   │   └── admin/           # Admin-specific components
-│   ├── contexts/            # React Context providers (Auth, etc.)
-│   ├── data/                # Mock data (will be replaced by API calls)
-│   ├── hooks/               # Custom React hooks
-│   ├── layouts/             # Layout components (MainLayout, etc.)
-│   ├── pages/               # Page components
-│   │   ├── auth/            # Login, Signup
-│   │   ├── student/         # Student pages
-│   │   ├── counselor/       # Counselor pages
-│   │   └── admin/           # Admin pages
-│   ├── services/            # API service layers (ready for backend integration)
-│   ├── utils/               # Utility functions
-│   ├── App.jsx              # Main app component with routing
-│   ├── main.jsx             # App entry point
-│   └── index.css            # Global styles with Tailwind
-├── public/                  # Static assets
-├── index.html               # HTML template
-├── tailwind.config.js       # Tailwind configuration
-├── vite.config.js           # Vite configuration
-└── package.json             # Dependencies and scripts
+│   ├── App.jsx              # Route config + ErrorBoundary
+│   ├── main.jsx             # React entry point
+│   ├── index.css            # Global styles + Tailwind custom classes
+│   ├── App.css
+│   ├── components/
+│   │   └── common/
+│   │       └── ProtectedRoute.jsx  # Role-based route guard
+│   ├── contexts/
+│   │   └── AuthContext.jsx  # Auth state: login, signup, logout, refreshUser
+│   ├── data/
+│   │   ├── mockColleges.js
+│   │   └── mockScholarshipsAndResources.js
+│   ├── layouts/
+│   │   └── MainLayout.jsx  # Sidebar navigation + responsive header
+│   ├── pages/
+│   │   ├── auth/
+│   │   │   ├── Login.jsx
+│   │   │   └── Signup.jsx
+│   │   ├── student/
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── Assessment.jsx
+│   │   │   ├── CareerExplorer.jsx
+│   │   │   ├── CollegeDirectory.jsx
+│   │   │   ├── Chatbot.jsx
+│   │   │   ├── Profile.jsx
+│   │   │   ├── StudyResources.jsx
+│   │   │   └── Scholarships.jsx
+│   │   └── admin/
+│   │       ├── Dashboard.jsx
+│   │       ├── ManageCareers.jsx
+│   │       └── ManageUsers.jsx
+│   ├── services/
+│   │   └── api.js           # Axios client (auth, assessment, colleges, chatbot, careers, admin)
+│   └── utils/
+│       └── cn.js            # classnames utility
+├── public/
+├── index.html
+├── package.json
+├── vite.config.js
+├── tailwind.config.js
+├── postcss.config.js
+└── eslint.config.js
 ```
+
+## Routes
+
+### Public
+- `/login` - Login page
+- `/signup` - Registration page
+
+### Student (protected, role: student)
+- `/student/dashboard` - Student dashboard
+- `/student/assessment` - Career assessment quiz
+- `/student/careers` - Career explorer
+- `/student/colleges` - College directory
+- `/student/chatbot` - AI chatbot
+- `/student/profile` - Profile management
+- `/student/resources` - Learning resources
+- `/student/scholarships` - Scholarship finder
+
+### Admin (protected, role: admin)
+- `/admin/dashboard` - Admin dashboard
+- `/admin/careers` - Manage careers (CRUD)
+- `/admin/users` - Manage users
+
+## Sidebar Navigation
+
+**Student:** Dashboard → Assessment → Career Explorer → College Directory → Learning Resources → AI Chatbot → Scholarships → Profile
+
+**Admin:** Dashboard → Manage Careers → Manage Users
+
+## Getting Started
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Opens at `http://localhost:5173`. Backend must be running at `http://localhost:8000`.
+
+### Demo Credentials
+
+| Role | Email | Password |
+|------|-------|----------|
+| Student | student@example.com | student123 |
+| Admin | admin@example.com | admin123 |
+
+## API Integration
+
+All API calls go through `src/services/api.js` with these modules:
+
+- **authAPI** - login, signup, me, updateProfile
+- **assessmentAPI** - getQuestions, submit
+- **collegesAPI** - getFilters, search, getStats
+- **chatbotAPI** - ask
+- **careersAPI** - list, fields, get, create, update, delete
+- **adminAPI** - stats, users, deleteUser
+
+Base URL: `VITE_API_URL` env var or `http://localhost:8000`
 
 ## Design System
 
-The app uses a custom glassmorphism design with:
-- **Light color palette** with gradient backgrounds (blue-50 to pink-50)
-- **Glass-effect cards** with backdrop blur and transparency
-- **Smooth animations** powered by Framer Motion
-- **Responsive design** that works on all devices
-- **Modern UI components** with hover effects and transitions
+- **Glass morphism**: `.glass-card` (backdrop-blur + transparency)
+- **Gradient buttons**: `.btn-primary` (blue-to-purple)
+- **Glass inputs**: `.input-glass`
+- **Gradient text**: `.text-gradient`
+- **Color scheme**: Blue-50 to Pink-50 background gradients
+- **Responsive**: Mobile-first with collapsible sidebar on mobile
 
-## Future Enhancements
+## Scripts
 
-### Backend Integration (To be implemented)
-- Replace mock data with API calls to Python backend
-- Implement real authentication with JWT tokens
-- Connect to ML models for personalized recommendations
-- Real-time chat functionality with actual AI/ML models
-
-### Internationalization
-- Multi-language support (English, Spanish, French, German, Hindi, Mandarin, Arabic, Portuguese)
-- RTL support for Arabic
-- Language switcher in UI
-
-### Additional Features
-- Email notifications for deadlines
-- Document upload for applications
-- Video counseling sessions
-- Advanced analytics and reporting
-- Mobile app (React Native)
-
-## Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-
-## License
-
-See LICENSE file in the root directory.
-
----
-
-Built with ❤️ for students seeking career guidance
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm run dev       # Development server (port 5173)
+npm run build     # Production build
+npm run preview   # Preview production build
+npm run lint      # ESLint check
+```
