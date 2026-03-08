@@ -30,7 +30,7 @@ export default function AdminDashboard() {
 
   const quickActions = [
     { icon: Briefcase, label: 'Manage Careers', path: '/admin/careers', color: 'blue' },
-    { icon: Users, label: 'View Users', path: '/admin/careers', color: 'purple' },
+    { icon: Users, label: 'Manage Users', path: '/admin/users', color: 'purple' },
   ];
 
   if (loading) {

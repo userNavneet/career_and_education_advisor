@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Bot, User as UserIcon } from 'lucide-react';
+import { Send, Bot, User as UserIcon, Sparkles, BookOpen, Cpu } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { chatbotAPI } from '../../services/api';
 
@@ -142,12 +142,28 @@ export default function Chatbot() {
                 }`}
               >
                 <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
-                <p className="text-xs mt-2 opacity-70">
-                  {new Date(msg.timestamp).toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <p className="text-xs opacity-70">
+                    {new Date(msg.timestamp).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                  {msg.sender === 'bot' && msg.source && msg.source !== 'system' && (
+                    <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                      msg.source === 'ollama'
+                        ? 'bg-purple-100 text-purple-700'
+                        : msg.source === 'faq'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {msg.source === 'ollama' && <Cpu className="w-3 h-3" />}
+                      {msg.source === 'faq' && <BookOpen className="w-3 h-3" />}
+                      {msg.source === 'rule_based' && <Sparkles className="w-3 h-3" />}
+                      {msg.source === 'ollama' ? 'AI' : msg.source === 'faq' ? 'FAQ' : 'Quick'}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {msg.sender === 'user' && (
