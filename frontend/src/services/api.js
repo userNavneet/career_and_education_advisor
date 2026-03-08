@@ -21,6 +21,7 @@ export const authAPI = {
   login: (email, password) => api.post('/api/auth/login', { email, password }),
   signup: (data) => api.post('/api/auth/signup', data),
   me: () => api.get('/api/auth/me'),
+  updateProfile: (data) => api.put('/api/auth/profile', data),
 };
 
 // Assessment

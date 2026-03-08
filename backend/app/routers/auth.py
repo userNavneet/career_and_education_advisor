@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel, EmailStr
-from app.database import get_user, save_user, get_all_users
+from app.database import get_user, save_user, get_all_users, update_user
 import bcrypt
 import secrets
 
@@ -98,3 +98,18 @@ def get_current_user(authorization: str = Header(None)):
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     return _strip_password(user)
+
+
+@router.put("/profile")
+def update_profile(body: dict, authorization: str = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    token = authorization[7:]
+    email = tokens_db.get(token)
+    if not email:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    updated = update_user(email, body)
+    if not updated:
+        raise HTTPException(status_code=404, detail="User not found")
+    return _strip_password(updated)

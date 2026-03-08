@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Compass,
   Building2,
-  Calendar,
   MessageSquare,
   User,
   BookOpen,
@@ -34,25 +33,18 @@ export default function MainLayout() {
     const navItems = {
       student: [
         { icon: LayoutDashboard, label: 'Dashboard', path: `${baseUrl}/dashboard` },
+        { icon: FileText, label: 'Assessment', path: `${baseUrl}/assessment` },
         { icon: Compass, label: 'Career Explorer', path: `${baseUrl}/careers` },
         { icon: Building2, label: 'College Directory', path: `${baseUrl}/colleges` },
-        { icon: FileText, label: 'Assessment', path: `${baseUrl}/assessment` },
-        { icon: Calendar, label: 'Timeline', path: `${baseUrl}/timeline` },
-        { icon: BookOpen, label: 'Study Resources', path: `${baseUrl}/resources` },
-        { icon: Award, label: 'Scholarships', path: `${baseUrl}/scholarships` },
+        { icon: BookOpen, label: 'Learning Resources', path: `${baseUrl}/resources` },
         { icon: MessageSquare, label: 'AI Chatbot', path: `${baseUrl}/chatbot` },
+        { icon: Award, label: 'Scholarships', path: `${baseUrl}/scholarships` },
         { icon: User, label: 'Profile', path: `${baseUrl}/profile` },
       ],
       admin: [
         { icon: LayoutDashboard, label: 'Dashboard', path: `${baseUrl}/dashboard` },
-        { icon: Users, label: 'My Students', path: `${baseUrl}/students` },
-        { icon: Calendar, label: 'Schedule', path: `${baseUrl}/schedule` },
         { icon: Compass, label: 'Manage Careers', path: `${baseUrl}/careers` },
-        { icon: Building2, label: 'Manage Colleges', path: `${baseUrl}/colleges` },
-        { icon: BookOpen, label: 'Manage Resources', path: `${baseUrl}/resources` },
-        { icon: Award, label: 'Manage Scholarships', path: `${baseUrl}/scholarships` },
         { icon: Users, label: 'Manage Users', path: `${baseUrl}/users` },
-        { icon: Settings, label: 'Settings', path: `${baseUrl}/settings` },
       ],
     };
 

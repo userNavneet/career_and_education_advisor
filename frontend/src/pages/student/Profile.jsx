@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
+import { authAPI } from '../../services/api';
 import {
   User,
   Mail,
@@ -15,16 +16,18 @@ import {
 } from 'lucide-react';
 
 export default function Profile() {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, refreshUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     ...user?.profile,
     ...user?.academicInfo,
     interests: user?.interests?.join(', ') || '',
   });
 
-  const handleSave = () => {
-    updateProfile({
+  const handleSave = async () => {
+    setSaving(true);
+    const payload = {
       profile: {
         ...user.profile,
         firstName: formData.firstName,
@@ -38,8 +41,17 @@ export default function Profile() {
         school: formData.school,
         gpa: formData.gpa,
       },
-      interests: formData.interests.split(',').map((i) => i.trim()),
-    });
+      interests: formData.interests.split(',').map((i) => i.trim()).filter(Boolean),
+    };
+
+    try {
+      const res = await authAPI.updateProfile(payload);
+      updateProfile(res.data);
+      await refreshUser();
+    } catch {
+      updateProfile(payload);
+    }
+    setSaving(false);
     setIsEditing(false);
   };
 
@@ -354,9 +366,9 @@ export default function Profile() {
           animate={{ opacity: 1, y: 0 }}
           className="mt-6 flex justify-end"
         >
-          <button onClick={handleSave} className="btn-primary flex items-center gap-2">
+          <button onClick={handleSave} disabled={saving} className="btn-primary flex items-center gap-2">
             <Save className="w-4 h-4" />
-            Save Changes
+            {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </motion.div>
       )}
