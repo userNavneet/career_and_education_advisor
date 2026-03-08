@@ -1,63 +1,59 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, MapPin, DollarSign, Users, Star, ExternalLink, Globe, Award, Briefcase } from 'lucide-react';
-import { colleges as mockColleges } from '../../data/mockColleges';
+import { Search, MapPin, Globe, Award, Briefcase, Star, ExternalLink, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { collegesAPI } from '../../services/api';
 
 export default function CollegeDirectory() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [backendColleges, setBackendColleges] = useState(null);
+  const [colleges, setColleges] = useState([]);
   const [filters, setFilters] = useState({ fields: [], states: [] });
   const [selectedField, setSelectedField] = useState('');
   const [selectedState, setSelectedState] = useState('');
   const [loading, setLoading] = useState(false);
-  const [backendAvailable, setBackendAvailable] = useState(false);
   const [stats, setStats] = useState(null);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const perPage = 50;
 
-  // Try to load backend filters on mount
+  // Load filters and stats on mount
   useEffect(() => {
-    const loadFilters = async () => {
-      try {
-        const [filtersRes, statsRes] = await Promise.all([
-          collegesAPI.getFilters(),
-          collegesAPI.getStats(),
-        ]);
+    Promise.all([collegesAPI.getFilters(), collegesAPI.getStats()])
+      .then(([filtersRes, statsRes]) => {
         setFilters(filtersRes.data);
         setStats(statsRes.data);
-        setBackendAvailable(true);
-      } catch {
-        setBackendAvailable(false);
-      }
-    };
-    loadFilters();
+      })
+      .catch(() => {});
   }, []);
 
-  const handleBackendSearch = async () => {
+  const doSearch = useCallback(async (pg) => {
     setLoading(true);
     try {
       const res = await collegesAPI.search({
         query: searchTerm,
         field: selectedField,
         state: selectedState,
-        limit: 20,
+        limit: perPage,
+        page: pg,
       });
-      setBackendColleges(res.data.colleges);
+      setColleges(res.data.colleges);
+      setTotal(res.data.total);
+      setPage(pg);
     } catch {
-      setBackendColleges(null);
+      setColleges([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, selectedField, selectedState]);
 
-  // Fallback: mock colleges filtered client-side
-  const filteredMockColleges = mockColleges.filter((college) => {
-    const matchesSearch =
-      college.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      college.location.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = typeFilter === 'all' || college.type === typeFilter;
-    return matchesSearch && matchesType;
-  });
+  // Auto-search when filters change
+  useEffect(() => {
+    doSearch(1);
+  }, [selectedField, selectedState]);
+
+  const totalPages = Math.ceil(total / perPage);
+
+  const handleSearch = () => doSearch(1);
 
   return (
     <div>
@@ -73,93 +69,107 @@ export default function CollegeDirectory() {
         </p>
       </div>
 
-      {/* AI Search (backend) */}
-      {backendAvailable && (
-        <div className="glass-card p-4 mb-4">
-          <p className="text-sm font-medium text-blue-600 mb-3">🔍 AI-Powered Search (70,000+ colleges)</p>
-          <div className="grid md:grid-cols-4 gap-3">
-            <div className="relative md:col-span-2">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="e.g. best engineering colleges in Delhi..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleBackendSearch()}
-                className="input-glass pl-10 w-full"
-              />
-            </div>
-            <select
-              value={selectedField}
-              onChange={(e) => setSelectedField(e.target.value)}
-              className="input-glass"
-            >
-              <option value="">All Fields</option>
-              {filters.fields.map((f) => (
-                <option key={f} value={f}>{f}</option>
-              ))}
-            </select>
-            <select
-              value={selectedState}
-              onChange={(e) => setSelectedState(e.target.value)}
-              className="input-glass"
-            >
-              <option value="">All States</option>
-              {filters.states.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+      {/* Search & Filters */}
+      <div className="glass-card p-4 mb-4">
+        <div className="grid md:grid-cols-4 gap-3">
+          <div className="relative md:col-span-2">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by name, location, field..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className="input-glass pl-10 w-full"
+            />
           </div>
-          <button
-            onClick={handleBackendSearch}
-            disabled={loading}
-            className="btn-primary mt-3 disabled:opacity-50"
+          <select
+            value={selectedField}
+            onChange={(e) => setSelectedField(e.target.value)}
+            className="input-glass"
           >
-            {loading ? 'Searching...' : 'Search Colleges'}
+            <option value="">All Fields</option>
+            {filters.fields.map((f) => (
+              <option key={f} value={f}>{f}</option>
+            ))}
+          </select>
+          <select
+            value={selectedState}
+            onChange={(e) => setSelectedState(e.target.value)}
+            className="input-glass"
+          >
+            <option value="">All States</option>
+            {filters.states.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-center gap-3 mt-3">
+          <button
+            onClick={handleSearch}
+            disabled={loading}
+            className="btn-primary disabled:opacity-50"
+          >
+            {loading ? 'Searching...' : 'Search'}
           </button>
+          {total > 0 && (
+            <span className="text-sm text-gray-600">
+              Showing {(page - 1) * perPage + 1}–{Math.min(page * perPage, total)} of{' '}
+              <strong>{total.toLocaleString()}</strong> colleges
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Loading */}
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <span className="ml-3 text-lg">Loading colleges...</span>
         </div>
       )}
 
-      {/* Backend results */}
-      {backendColleges && backendColleges.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-xl font-bold mb-4">
-            Search Results ({backendColleges.length} colleges)
-          </h2>
-          <div className="grid md:grid-cols-2 gap-4">
-            {backendColleges.map((college, index) => (
+      {/* Results */}
+      {!loading && colleges.length > 0 && (
+        <>
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
+            {colleges.map((college, index) => (
               <motion.div
                 key={`${college.name}-${index}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ delay: Math.min(index * 0.03, 0.5) }}
                 className="glass-card-hover p-5"
               >
                 <h3 className="font-bold text-lg mb-2">{college.name}</h3>
                 <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <MapPin className="w-4 h-4" />
-                    <span>{college.address}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Globe className="w-4 h-4" />
-                    <span>{college.state}</span>
-                  </div>
+                  {college.address && (
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <MapPin className="w-4 h-4 flex-shrink-0" />
+                      <span>{college.address}</span>
+                    </div>
+                  )}
+                  {college.state && (
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Globe className="w-4 h-4 flex-shrink-0" />
+                      <span>{college.state}</span>
+                    </div>
+                  )}
                   {college.field && (
                     <div className="flex items-center gap-2 text-gray-600">
-                      <Briefcase className="w-4 h-4" />
+                      <Briefcase className="w-4 h-4 flex-shrink-0" />
                       <span className="truncate">{college.field}</span>
                     </div>
                   )}
                   {college.placement && (
                     <div className="flex items-center gap-2 text-gray-600">
-                      <Star className="w-4 h-4 text-yellow-500" />
+                      <Star className="w-4 h-4 text-yellow-500 flex-shrink-0" />
                       <span>Placement: {college.placement}</span>
                     </div>
                   )}
                   {college.accreditation && (
                     <div className="flex items-center gap-2 text-gray-600">
-                      <Award className="w-4 h-4 text-green-500" />
+                      <Award className="w-4 h-4 text-green-500 flex-shrink-0" />
                       <span>{college.accreditation}</span>
                     </div>
                   )}
@@ -178,121 +188,66 @@ export default function CollegeDirectory() {
               </motion.div>
             ))}
           </div>
-        </div>
-      )}
 
-      {backendColleges && backendColleges.length === 0 && (
-        <div className="glass-card p-6 mb-8 text-center text-gray-500">
-          No colleges found for your search. Try different keywords or filters.
-        </div>
-      )}
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="glass-card p-4 flex items-center justify-center gap-2 flex-wrap">
+              <button
+                onClick={() => doSearch(page - 1)}
+                disabled={page <= 1 || loading}
+                className="p-2 hover:bg-white/50 rounded-lg disabled:opacity-30"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
 
-      {/* Featured Colleges (mock data fallback / always show) */}
-      <div>
-        <h2 className="text-xl font-bold mb-4">
-          {backendAvailable ? 'Featured Colleges' : 'College Directory'}
-        </h2>
-
-        {!backendAvailable && (
-          <div className="glass-card p-4 mb-6">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search colleges..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="input-glass pl-10 w-full"
-                />
-              </div>
-              <div className="relative">
-                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <select
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                  className="input-glass pl-10 w-full"
-                >
-                  <option value="all">All Types</option>
-                  <option value="Public">Public</option>
-                  <option value="Private">Private</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
-          {filteredMockColleges.map((college, index) => (
-            <motion.div
-              key={college.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="glass-card-hover p-6"
-            >
-            <img
-              src={college.image}
-              alt={college.name}
-              className="w-full h-48 object-cover rounded-lg mb-4 bg-gradient-to-br from-green-100 to-blue-100"
-              onError={(e) => { e.target.onerror = null; e.target.src = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22/>'; e.target.className = 'w-full h-48 rounded-lg mb-4 bg-gradient-to-br from-green-400 to-blue-500'; }}
-            />
-
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <h3 className="font-bold text-xl mb-1">{college.name}</h3>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <MapPin className="w-4 h-4" />
-                  <span className="text-sm">{college.location}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 bg-yellow-100 px-2 py-1 rounded">
-                <Star className="w-4 h-4 text-yellow-600 fill-yellow-600" />
-                <span className="text-sm font-semibold">#{college.ranking}</span>
-              </div>
-            </div>
-
-            <div className="space-y-2 mb-4">
-              <div className="flex items-center gap-2 text-sm">
-                <DollarSign className="w-4 h-4 text-green-600" />
-                <span>{college.tuitionFees}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Users className="w-4 h-4 text-blue-600" />
-                <span>{college.studentCount} students</span>
-              </div>
-              <div className="text-sm">
-                <span className="font-medium">Acceptance Rate:</span> {college.acceptanceRate}
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <p className="text-sm font-medium mb-2">Top Programs:</p>
-              <div className="flex flex-wrap gap-2">
-                {college.programs.slice(0, 3).map((program) => (
-                  <span
-                    key={program}
-                    className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded"
+              {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                let pg;
+                if (totalPages <= 7) {
+                  pg = i + 1;
+                } else if (page <= 4) {
+                  pg = i + 1;
+                } else if (page >= totalPages - 3) {
+                  pg = totalPages - 6 + i;
+                } else {
+                  pg = page - 3 + i;
+                }
+                return (
+                  <button
+                    key={pg}
+                    onClick={() => doSearch(pg)}
+                    disabled={loading}
+                    className={`w-10 h-10 rounded-lg text-sm font-medium transition-all ${
+                      pg === page
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                        : 'hover:bg-white/50'
+                    }`}
                   >
-                    {program}
-                  </span>
-                ))}
-              </div>
-            </div>
+                    {pg}
+                  </button>
+                );
+              })}
 
-            <a
-              href={college.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary w-full flex items-center justify-center gap-2"
-            >
-              Visit Website
-              <ExternalLink className="w-4 h-4" />
-            </a>
-          </motion.div>
-        ))}
-      </div>
-    </div>
+              <button
+                onClick={() => doSearch(page + 1)}
+                disabled={page >= totalPages || loading}
+                className="p-2 hover:bg-white/50 rounded-lg disabled:opacity-30"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+
+              <span className="text-sm text-gray-500 ml-2">
+                Page {page} of {totalPages.toLocaleString()}
+              </span>
+            </div>
+          )}
+        </>
+      )}
+
+      {!loading && colleges.length === 0 && (
+        <div className="glass-card p-8 text-center text-gray-500">
+          No colleges found. Try different filters or search terms.
+        </div>
+      )}
     </div>
   );
 }

@@ -56,7 +56,8 @@ class SearchRequest(BaseModel):
     query: str = ""
     field: str = ""
     state: str = ""
-    limit: int = 10
+    limit: int = 50
+    page: int = 1
 
 
 @router.get("/filters")
@@ -71,18 +72,30 @@ def get_filters():
 @router.post("/search")
 def search_colleges(req: SearchRequest):
     """Search colleges by AI query or filters."""
-    limit = min(req.limit, 50)
+    per_page = min(req.limit, 100)
+    page = max(req.page, 1)
 
     # AI semantic search if query provided
     if req.query.strip():
+        # For semantic search, fetch more candidates then apply filters
+        sem_limit = min(per_page * 5, 500)
         query_vector = _model.encode([req.query])
-        distances, indices = _index.search(query_vector, limit)
+        distances, indices = _index.search(query_vector, sem_limit)
         results = _df.iloc[indices[0]]
-        colleges = [_row_to_dict(row) for _, row in results.iterrows()]
-        return {"count": len(colleges), "colleges": colleges}
+
+        if req.field:
+            results = results[results["FIELD"].str.contains(req.field, case=False, na=False)]
+        if req.state:
+            results = results[results["STATE"].str.contains(req.state, case=False, na=False)]
+
+        total = len(results)
+        start = (page - 1) * per_page
+        page_results = results.iloc[start:start + per_page]
+        colleges = [_row_to_dict(row) for _, row in page_results.iterrows()]
+        return {"total": total, "page": page, "per_page": per_page, "colleges": colleges}
 
     # Filter-based search
-    results = _df.copy()
+    results = _df
 
     if req.field:
         results = results[results["FIELD"].str.contains(req.field, case=False, na=False)]
@@ -90,9 +103,11 @@ def search_colleges(req: SearchRequest):
     if req.state:
         results = results[results["STATE"].str.contains(req.state, case=False, na=False)]
 
-    results = results.head(limit)
-    colleges = [_row_to_dict(row) for _, row in results.iterrows()]
-    return {"count": len(colleges), "colleges": colleges}
+    total = len(results)
+    start = (page - 1) * per_page
+    page_results = results.iloc[start:start + per_page]
+    colleges = [_row_to_dict(row) for _, row in page_results.iterrows()]
+    return {"total": total, "page": page, "per_page": per_page, "colleges": colleges}
 
 
 @router.get("/stats")
