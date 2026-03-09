@@ -174,7 +174,7 @@ export default function CollegeDirectory() {
                     </div>
                   )}
                 </div>
-                {college.website && (
+                {college.website ? (
                   <a
                     href={college.website.startsWith('http') ? college.website : `https://${college.website}`}
                     target="_blank"
@@ -184,6 +184,10 @@ export default function CollegeDirectory() {
                     Visit Website
                     <ExternalLink className="w-4 h-4" />
                   </a>
+                ) : (
+                  <div className="w-full flex items-center justify-center gap-2 mt-3 text-sm text-gray-400 bg-gray-100 rounded-lg py-2 cursor-not-allowed">
+                    Website Not Available
+                  </div>
                 )}
               </motion.div>
             ))}

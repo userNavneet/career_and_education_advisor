@@ -17,6 +17,12 @@ EMBEDDINGS_PATH = os.path.join(DATA_DIR, "college_embeddings.npy")
 _df = pd.read_csv(CSV_PATH)
 _df = _df.fillna("")
 
+# Normalize invalid websites
+_df["WEBSITE"] = _df["WEBSITE"].apply(
+    lambda w: "" if str(w).strip().upper() in ("NOT AVAILABLE", "NA", "N/A", "NONE", "-") else str(w).strip()
+)
+_df["_has_website"] = (_df["WEBSITE"] != "").astype(int)
+
 # Load embeddings
 _embeddings = np.load(EMBEDDINGS_PATH)
 
@@ -88,6 +94,9 @@ def search_colleges(req: SearchRequest):
         if req.state:
             results = results[results["STATE"].str.contains(req.state, case=False, na=False)]
 
+        # Sort: colleges with websites first
+        results = results.sort_values("_has_website", ascending=False)
+
         total = len(results)
         start = (page - 1) * per_page
         page_results = results.iloc[start:start + per_page]
@@ -102,6 +111,9 @@ def search_colleges(req: SearchRequest):
 
     if req.state:
         results = results[results["STATE"].str.contains(req.state, case=False, na=False)]
+
+    # Sort: colleges with websites first
+    results = results.sort_values("_has_website", ascending=False)
 
     total = len(results)
     start = (page - 1) * per_page
