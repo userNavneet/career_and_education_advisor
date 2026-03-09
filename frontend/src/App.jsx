@@ -33,6 +33,9 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+// Landing Page
+import LandingPage from './pages/LandingPage';
+
 // Auth Pages
 import Login from './pages/auth/Login';
 import Signup from './pages/auth/Signup';
@@ -61,6 +64,7 @@ function App() {
       <AuthProvider>
         <Routes>
           {/* Public Routes */}
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
@@ -97,9 +101,8 @@ function App() {
             <Route path="users" element={<AdminUsers />} />
           </Route>
 
-          {/* Default Route */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          {/* Catch-all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
     </Router>
