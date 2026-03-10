@@ -11,7 +11,7 @@ router = APIRouter()
 # Configuration
 # ---------------------------------------------------------------------------
 OLLAMA_URL = "http://localhost:11434/api/chat"
-OLLAMA_MODEL = "qwen3.5:4b"
+OLLAMA_MODEL = "qwen2.5:0.5b"
 SIMILARITY_THRESHOLD = 0.5          # L2 distance; lower = better match
 OLLAMA_TIMEOUT = 60                 # seconds
 
@@ -153,7 +153,7 @@ def _ollama_answer(question: str, ctx: Optional[UserContext]) -> str | None:
                     {"role": "user", "content": question},
                 ],
                 "stream": False,
-                "options": {"temperature": 0.7, "num_predict": 256},
+                "options": {"temperature": 0.7, "num_predict": 1024},
             },
             timeout=OLLAMA_TIMEOUT,
         )
