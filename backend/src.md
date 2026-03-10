@@ -8,7 +8,7 @@ FastAPI-based backend powering the EduCareer platform with RESTful APIs, SQLite 
 - **Uvicorn** - ASGI server
 - **SQLAlchemy** - ORM for SQLite database
 - **bcrypt** - Password hashing
-- **Ollama** (`qwen3.5:4b`) - Local LLM for AI chatbot
+- **Ollama** (`qwen2.5:0.5b`) - Local LLM for AI chatbot
 - **sentence-transformers** (`all-MiniLM-L6-v2`) - Text embeddings
 - **FAISS** - Vector similarity search
 - **pandas** - Data processing
@@ -78,7 +78,7 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 The server will:
 1. Create/seed the SQLite database (`data/educareer.db`) with 36 careers + default users
-2. Attempt to start Ollama and pull `qwen3.5:4b` (falls back gracefully if unavailable)
+2. Attempt to start Ollama and pull `qwen2.5:0.5b` (falls back gracefully if unavailable)
 3. Load FAISS indexes for FAQ and college embeddings
 4. Serve the API at `http://localhost:8000`
 
