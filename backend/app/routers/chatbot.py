@@ -11,7 +11,7 @@ router = APIRouter()
 # Configuration
 # ---------------------------------------------------------------------------
 OLLAMA_URL = "http://localhost:11434/api/chat"
-OLLAMA_MODEL = "qwen2.5:0.5b"
+OLLAMA_MODEL = "qwen3.5:4b"
 SIMILARITY_THRESHOLD = 0.5          # L2 distance; lower = better match
 OLLAMA_TIMEOUT = 60                 # seconds
 

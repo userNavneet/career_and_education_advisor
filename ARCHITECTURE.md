@@ -64,7 +64,7 @@
 │  │  sentence-transformers ──▶ FAISS Index ──▶ FAQ Matching      │    │
 │  │  (all-MiniLM-L6-v2)      (IndexFlatL2)    College Search    │    │
 │  │                                                              │    │
-│  │  Ollama (localhost:11434) ──▶ qwen2.5:0.5b ──▶ LLM Chat    │    │
+│  │  Ollama (localhost:11434) ──▶ qwen3.5:4b ──▶ LLM Chat    │    │
 │  └──────────────────────────────────────────────────────────────┘    │
 └──────────────────────────────────────────────────────────────────────┘
 ```
@@ -274,7 +274,7 @@ Student sends message in /student/chatbot
 │     - Platform features description                  │
 │     - User profile (name, school, interests, scores) │
 │  2. POST http://localhost:11434/api/chat             │
-│     Model: qwen2.5:0.5b                              │
+│     Model: qwen3.5:4b                              │
 │     Options: temperature=0.7, num_predict=256        │
 │     Timeout: 60s                                     │
 │  3. Strip <think>...</think> blocks (deepseek compat)│
@@ -482,7 +482,7 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
                 │
                 └──▶ _ensure_ollama()
                      ├── Check http://localhost:11434
-                     │   ├── Running ──▶ Check for qwen2.5:0.5b model
+                     │   ├── Running ──▶ Check for qwen3.5:4b model
                      │   │               ├── Present ──▶ Ready
                      │   │               └── Missing ──▶ Pull model (~397MB)
                      │   │
@@ -518,7 +518,7 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 | Backend | SQLite | - | Database |
 | Backend | bcrypt | - | Password hashing |
 | AI/ML | Ollama | 0.9.3 | Local LLM runtime |
-| AI/ML | qwen2.5:0.5b | 0.5B params | Chat model |
+| AI/ML | qwen3.5:4b | 4B params | Chat model |
 | AI/ML | sentence-transformers | - | Text embeddings |
 | AI/ML | all-MiniLM-L6-v2 | 384-dim | Embedding model |
 | AI/ML | FAISS | - | Vector similarity |
