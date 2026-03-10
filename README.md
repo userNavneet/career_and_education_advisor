@@ -8,7 +8,7 @@ A full-stack web application that guides students through their career and educa
 - **📊 Career Assessment** - 20-question Likert-scale quiz across 12 career categories with personalized recommendations
 - **💼 Career Explorer** - Browse 36 careers across 12 fields with salary data, skills, and growth projections
 - **🎓 College Directory** - Search 70,000+ Indian colleges with AI-powered semantic search, field/state filters, and pagination
-- **🤖 AI Chatbot** - Hybrid chatbot: FAQ (FAISS) → Ollama LLM (`qwen3.5:4b`) → rule-based fallback
+- **🤖 AI Chatbot** - Hybrid chatbot: FAQ (FAISS) → Ollama LLM (`qwen2.5:0.5b`) → rule-based fallback
 - **👤 Profile Management** - Auto-calculated profile completion percentage, academic records, and interest tracking
 - **📚 Learning Resources** - Curated study materials and test preparation resources
 - **💰 Scholarships** - Discover funding opportunities with eligibility criteria
@@ -34,7 +34,7 @@ A full-stack web application that guides students through their career and educa
 - **Uvicorn** - ASGI server
 - **SQLAlchemy** - ORM with SQLite database
 - **bcrypt** - Secure password hashing
-- **Ollama** (`qwen3.5:4b`) - Local LLM for chatbot responses
+- **Ollama** (`qwen2.5:0.5b`) - Local LLM for chatbot responses
 - **sentence-transformers** (`all-MiniLM-L6-v2`) - Embeddings for FAQ matching and college search
 - **FAISS** - Vector similarity search for FAQ and college retrieval
 - **pandas** - Data processing for college and assessment datasets
@@ -216,7 +216,7 @@ career_and_education_advisor/
 
 ### Hybrid Chatbot (3-tier fallback)
 1. **FAQ Search** - FAISS index over `faq.xlsx` with `all-MiniLM-L6-v2` embeddings (threshold: 0.5)
-2. **Ollama LLM** - `qwen3.5:4b` model with career context + user profile in system prompt
+2. **Ollama LLM** - `qwen2.5:0.5b` model with career context + user profile in system prompt
 3. **Rule-based** - Pattern-matched keyword responses as final fallback
 
 ### College Semantic Search

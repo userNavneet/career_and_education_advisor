@@ -21,7 +21,7 @@ app.add_middleware(
 )
 
 OLLAMA_BASE = "http://localhost:11434"
-OLLAMA_MODEL = "qwen3.5:4b"
+OLLAMA_MODEL = "qwen2.5:0.5b"
 
 
 def _ensure_ollama():
